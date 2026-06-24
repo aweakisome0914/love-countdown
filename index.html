@@ -147,13 +147,14 @@
             background: linear-gradient(135deg, var(--pink-light) 0%, var(--lavender) 100%);
             box-shadow: 0 10px 40px var(--shadow-pink), 0 2px 8px var(--shadow-lav);
             border: 2.5px solid rgba(255,255,255,0.9);
+            cursor: pointer;
         }
         .photo-frame img {
             width: 100%;
             height: 100%;
             object-fit: cover;
             display: none;
-            transition: opacity 0.4s ease;
+            transition: opacity 0.5s ease;
         }
         .photo-frame img.visible { display: block; }
         .photo-placeholder {
@@ -163,15 +164,18 @@
             flex-direction: column;
             align-items: center;
             justify-content: center;
-            gap: 10px;
+            gap: 12px;
         }
-        .photo-placeholder-emoji { font-size: 52px; opacity: 0.55; }
-        .photo-placeholder-text {
-            font-size: 13px;
+        .photo-placeholder-emoji { font-size: 48px; opacity: 0.5; }
+        .photo-placeholder-main {
+            font-size: 17px;
+            font-weight: 600;
             color: var(--text-mid);
-            text-align: center;
-            line-height: 1.8;
-            font-weight: 300;
+        }
+        .photo-placeholder-sub {
+            font-size: 13px;
+            color: var(--text-soft);
+            letter-spacing: 3px;
         }
         /* 年バッジ */
         .photo-badge {
@@ -187,7 +191,6 @@
             font-weight: 500;
             letter-spacing: 1px;
         }
-        /* ハートのキラキラ装飾 */
         .photo-deco {
             position: absolute;
             bottom: 14px;
@@ -197,6 +200,58 @@
             letter-spacing: 4px;
             text-shadow: 0 1px 4px rgba(200,80,140,0.4);
         }
+        /* Choose / Remove ボタン行 */
+        .photo-actions {
+            display: flex;
+            gap: 10px;
+            margin-top: 14px;
+            justify-content: center;
+        }
+        .btn-choose-photo {
+            flex: 1;
+            max-width: 170px;
+            padding: 13px 16px;
+            background: linear-gradient(135deg, var(--pink-deep), var(--lavender-mid));
+            border: none;
+            border-radius: 18px;
+            color: #fff;
+            font-size: 14px;
+            font-weight: 700;
+            font-family: inherit;
+            cursor: pointer;
+            letter-spacing: 0.5px;
+            box-shadow: 0 5px 18px var(--shadow-pink);
+            transition: box-shadow 0.2s, transform 0.15s;
+        }
+        .btn-choose-photo:active { transform: scale(0.97); }
+        .btn-remove-photo {
+            flex: 1;
+            max-width: 150px;
+            padding: 13px 16px;
+            background: rgba(255,255,255,0.85);
+            border: 1.5px solid rgba(232,83,138,0.3);
+            border-radius: 18px;
+            color: var(--text-soft);
+            font-size: 14px;
+            font-weight: 600;
+            font-family: inherit;
+            cursor: pointer;
+            transition: background 0.2s, color 0.2s, border-color 0.2s;
+        }
+        .btn-remove-photo:hover { background: rgba(255,182,193,0.15); color: var(--pink-deep); border-color: rgba(232,83,138,0.5); }
+        /* エラーメッセージ */
+        .photo-error {
+            display: none;
+            margin-top: 10px;
+            padding: 11px 16px;
+            background: rgba(255,82,82,0.08);
+            border: 1.5px solid rgba(255,82,82,0.25);
+            border-radius: 14px;
+            font-size: 12px;
+            color: #c0392b;
+            line-height: 1.5;
+        }
+        .photo-error.visible { display: block; }
 
         /* ================================================
            COUNTDOWN MAIN SECTION
@@ -279,6 +334,32 @@
             margin-top: 2px;
         }
 
+        /* あいたい / 남았어 subtitle */
+        .countdown-aitai {
+            font-size: 13px;
+            color: var(--text-soft);
+            letter-spacing: 4px;
+            margin: 2px 0 0;
+            display: none;
+        }
+        .countdown-aitai.visible { display: block; }
+
+        /* 日付未設定の状態 */
+        .unset-state {
+            display: none;
+            padding: 26px 20px;
+            border-radius: 26px;
+            background: linear-gradient(135deg, rgba(255,228,236,0.7), rgba(234,213,245,0.6));
+            border: 1.5px solid rgba(255,182,193,0.4);
+            max-width: 340px;
+            margin: 0 auto;
+            text-align: center;
+        }
+        .unset-state.visible { display: block; }
+        .unset-state-en { font-size: 20px; font-weight: 700; color: var(--pink-deep); margin-bottom: 8px; }
+        .unset-state-ko { font-size: 14px; color: var(--text-mid); line-height: 1.7; }
+        .unset-state-ja { font-size: 12px; color: var(--text-soft); letter-spacing: 2px; margin-top: 6px; }
+
         /* メインメッセージ */
         .main-message {
             font-size: 18px;
@@ -292,6 +373,72 @@
             0%, 100% { opacity: 0.85; transform: translateY(0); }
             50%       { opacity: 1;    transform: translateY(-3px); }
         }
+
+        /* ================================================
+           DATE PICKER CARD — 次の会う日を設定するUI
+        ================================================ */
+        .date-card {
+            background: var(--card-bg);
+            border-radius: 26px;
+            padding: 20px 20px 18px;
+            margin: 20px auto 0;
+            max-width: 340px;
+            box-shadow: 0 5px 22px var(--shadow-pink);
+            border: 1.5px solid rgba(255,182,193,0.35);
+        }
+        .date-card-label {
+            font-size: 10px;
+            letter-spacing: 2.5px;
+            color: var(--text-soft);
+            text-transform: uppercase;
+            margin-bottom: 12px;
+        }
+        .date-card-row {
+            display: flex;
+            gap: 10px;
+            align-items: center;
+        }
+        .main-date-input {
+            flex: 1;
+            padding: 13px 14px;
+            border-radius: 16px;
+            border: 1.5px solid rgba(232,83,138,0.25);
+            background: rgba(255,255,255,0.9);
+            font-family: inherit;
+            font-size: 15px;
+            font-weight: 500;
+            color: var(--text-dark);
+            outline: none;
+            -webkit-appearance: none;
+            appearance: none;
+            min-width: 0;
+        }
+        .main-date-input:focus { border-color: var(--pink-deep); }
+        .btn-save-date {
+            padding: 13px 18px;
+            background: linear-gradient(135deg, var(--pink-deep), var(--lavender-mid));
+            border: none;
+            border-radius: 16px;
+            color: #fff;
+            font-size: 14px;
+            font-weight: 700;
+            font-family: inherit;
+            cursor: pointer;
+            white-space: nowrap;
+            flex-shrink: 0;
+            box-shadow: 0 4px 14px var(--shadow-pink);
+            transition: transform 0.15s;
+        }
+        .btn-save-date:active { transform: scale(0.96); }
+        .saved-feedback {
+            display: none;
+            font-size: 11px;
+            color: var(--pink-deep);
+            letter-spacing: 1px;
+            margin-top: 10px;
+            animation: fadeFloat 1s ease both;
+        }
+        .saved-feedback.visible { display: block; }
         .meet-date-text {
             font-size: 12px;
             color: var(--text-soft);
@@ -385,6 +532,7 @@
         .today-confetti { font-size: 30px; display: block; margin-bottom: 10px; animation: spin 5s linear infinite; display: inline-block; }
         .today-banner-en { font-size: 19px; font-weight: 700; color: var(--pink-deep); letter-spacing: 0.5px; margin: 8px 0; }
         .today-banner-ko { font-size: 14px; color: var(--text-mid); line-height: 1.85; }
+        .today-banner-ja { font-size: 13px; color: var(--text-soft); letter-spacing: 3px; margin-top: 6px; }
         @keyframes todayShine {
             0%, 100% { box-shadow: 0 8px 36px rgba(232,83,138,0.32); }
             50%       { box-shadow: 0 14px 54px rgba(232,83,138,0.64); }
@@ -405,8 +553,9 @@
             border: 1.5px solid rgba(178,148,200,0.3);
         }
         .past-banner.visible { display: block; }
-        .past-banner-ko { font-size: 18px; font-weight: 500; color: var(--lavender-deep); margin-bottom: 6px; }
-        .past-banner-ja { font-size: 12px; color: var(--text-soft); }
+        .past-banner-en { font-size: 20px; font-weight: 700; color: var(--lavender-deep); margin-bottom: 8px; letter-spacing: 0.5px; }
+        .past-banner-ko { font-size: 14px; color: var(--text-mid); line-height: 1.7; margin-bottom: 6px; }
+        .past-banner-ja { font-size: 12px; color: var(--text-soft); letter-spacing: 3px; }
 
         /* ================================================
            FLOATING HEARTS — 7日以内の演出
@@ -872,37 +1021,62 @@
 
     <!-- ── PHOTO ── -->
     <section class="photo-section">
-        <div class="photo-frame">
-            <!-- 写真をURLで設定するか設定画面で入力する -->
+
+        <!-- 写真フレーム: クリックで Choose Photo と同じ動作 -->
+        <div class="photo-frame" onclick="document.getElementById('mainPhotoInput').click()">
             <img id="couplePhoto" src="" alt="커플 사진">
             <div class="photo-placeholder" id="photoPlaceholder">
-                <div class="photo-placeholder-emoji">📷</div>
-                <div class="photo-placeholder-text">
-                    두 사람의 사진을 여기에 넣어주세요<br>
-                    <span style="font-size:12px; color:var(--text-soft);">⚙️ 설정 → 사진 URL 입력</span>
-                </div>
+                <div class="photo-placeholder-emoji">📸</div>
+                <p class="photo-placeholder-main">우리 사진을 넣어줘</p>
+                <p class="photo-placeholder-sub">あいたい</p>
             </div>
             <div class="photo-badge" id="photoBadge">2026</div>
             <div class="photo-deco">♡ &nbsp; ♡ &nbsp; ♡</div>
         </div>
+
+        <!-- Choose / Remove ボタン -->
+        <div class="photo-actions">
+            <!-- label で hidden input をトリガー -->
+            <label class="btn-choose-photo" for="mainPhotoInput">Choose Photo</label>
+            <button class="btn-remove-photo" onclick="removePhotoMain()">Remove Photo</button>
+        </div>
+
+        <!-- 圧縮・保存する hidden input (jpg/png/webp 対応) -->
+        <input type="file" id="mainPhotoInput" accept="image/jpeg,image/jpg,image/png,image/webp"
+               style="display:none" onchange="handleMainPhotoSelect(this.files[0])">
+
+        <!-- エラーメッセージ (韓国語) -->
+        <div class="photo-error" id="photoError"></div>
+
     </section>
 
     <!-- ── COUNTDOWN ── -->
     <section class="countdown-section">
-        <p class="countdown-eyebrow">다음 만남까지 • 次に会えるまで</p>
+        <p class="countdown-eyebrow" id="countdownEyebrow">다음 만남까지 • 次に会えるまで</p>
 
-        <!-- D-3 / D-2 / D-1 tag — shown only within 3 days (JS controlled) -->
+        <!-- D-3 / D-2 / D-1 tag — within 3 days (JS controlled) -->
         <div class="d-tag-wrap" id="dTagWrap">
             <span class="d-tag" id="dTag">D-3</span>
         </div>
 
+        <!-- 大きな日数 -->
         <div class="countdown-number-wrap" id="countdownNumWrap">
             <span class="countdown-prefix"></span>
             <span class="countdown-days" id="daysCount">--</span>
-            <span class="countdown-suffix">일</span>
+            <span class="countdown-suffix" id="countdownSuffix">일 남았어</span>
         </div>
 
-        <!-- sleeps card -->
+        <!-- あいたい subtitle — counting down only -->
+        <p class="countdown-aitai" id="countdownAitai">あいたい</p>
+
+        <!-- 日付未設定の状態 (JS controlled) -->
+        <div class="unset-state" id="unsetState">
+            <p class="unset-state-en">Set Date</p>
+            <p class="unset-state-ko">만날 날짜를 정해줘</p>
+            <p class="unset-state-ja">まっててね</p>
+        </div>
+
+        <!-- 「あと○回寝たら」카드 -->
         <div class="sleeps-card">
             <span class="sleeps-icon">🌙</span>
             <div class="sleeps-text-wrap">
@@ -924,23 +1098,30 @@
         <div class="today-banner" id="todayBanner">
             <span class="today-confetti">🎊</span>
             <p class="today-banner-en">Today is our day ✨</p>
-            <p class="today-banner-ko">오늘 드디어 만나는 날이야<br>드디어 너를 안을 수 있어 💕</p>
+            <p class="today-banner-ko">오늘 드디어 만나는 날이야 💕</p>
+            <p class="today-banner-ja">だいすき</p>
         </div>
 
         <!-- 思い出モード — 会う日を過ぎた場合 (JS制御) -->
         <div class="past-banner" id="pastBanner">
-            <p class="past-banner-ko">🌸 우리 다시 만난 날</p>
-            <p class="past-banner-ja">また会えた日の思い出 💜</p>
+            <p class="past-banner-en">Memories</p>
+            <p class="past-banner-ko">🌸 우리가 다시 만난 날</p>
+            <p class="past-banner-ja">あいしてる</p>
         </div>
 
         <!-- メインメッセージ (設定画面で変更可能) -->
         <p class="main-message" id="mainMessage">조금만 더 기다리자 💕</p>
 
-        <!-- 日付表示 + 直接選択できる input -->
-        <div class="date-change-wrap">
-            <p class="meet-date-text" id="meetDateText">다음 만날 날 : 설정해주세요</p>
-            <input type="date" id="mainDateInput" class="main-date-input"
-                   onchange="onMainDateChange(event)">
+        <!-- Next Meeting Date カード — Save ボタン付き -->
+        <div class="date-card">
+            <p class="date-card-label">Next Meeting Date</p>
+            <div class="date-card-row">
+                <input type="date" id="mainDateInput" class="main-date-input"
+                       onchange="onMainDatePick(event)">
+                <button class="btn-save-date" onclick="saveDate()">Save</button>
+            </div>
+            <p class="meet-date-text" id="meetDateText"></p>
+            <p class="saved-feedback" id="savedFeedback">✓ Saved</p>
         </div>
 
         <!-- フローティングハーツ — 7日以内に自動表示 (JS制御) -->
@@ -1104,22 +1285,12 @@
             <span class="settings-photo-ph" id="settingsPhotoPh">📷</span>
         </div>
 
-        <!-- File picker -->
-        <div class="form-group">
-            <label class="btn-file-pick" for="inFile">
-                📁 디바이스에서 선택 / Choose from Device
-            </label>
-            <input type="file" id="inFile" accept="image/*" style="display:none" onchange="handleFileSelect(event)">
-        </div>
-
-        <!-- URL input as alternative -->
-        <div class="form-or">— or enter URL —</div>
+        <!-- URL input (alternative to main screen upload) -->
         <div class="form-group">
             <label class="form-label" for="inPhoto">URL 입력 / Enter URL</label>
             <input type="url" class="form-input" id="inPhoto" placeholder="https://example.com/photo.jpg">
+            <p class="form-hint">※ 메인 화면의 Choose Photo 버튼으로도 변경 가능</p>
         </div>
-
-        <button type="button" class="btn-clear-photo" onclick="clearPhoto()">🗑 사진 삭제 / Remove Photo</button>
 
         <button class="btn-save" onclick="saveSettings()">저장하기 / Save 💕</button>
         <button class="btn-cancel" onclick="closeSettings()">닫기 / Close</button>
@@ -1246,6 +1417,12 @@
         dTagWrap.classList.remove('visible');
         heartsWrap.innerHTML = '';
 
+        if (diffDays === null) {
+            // 未設定 — 全非表示
+            card.style.display = 'none';
+            return;
+        }
+
         if (diffDays === 0) {
             // 当日 — today-banner + ハーツ最大
             card.style.display = 'none';
@@ -1286,6 +1463,81 @@
         if (mood.floatingHearts) {
             spawnFloatingHearts(heartsWrap, mood.heartsCount || 5);
         }
+    }
+
+    // ============================================================
+    //  PHOTO UPLOAD (main screen)
+    //  Canvas で圧縮 → localStorage に保存
+    // ============================================================
+
+    const PHOTO_MAX_WIDTH   = 1200;  // リサイズ上限 px
+    const PHOTO_JPEG_QUALITY = 0.78; // JPEG 圧縮品質 (0〜1)
+
+    function handleMainPhotoSelect(file) {
+        if (!file) return;
+
+        // ファイル形式チェック
+        const allowed = ['image/jpeg', 'image/jpg', 'image/png', 'image/webp'];
+        if (!allowed.includes(file.type)) {
+            showPhotoError('지원하지 않는 형식이에요. jpg / png / webp 파일을 선택해주세요 🙏');
+            return;
+        }
+
+        const reader = new FileReader();
+        reader.onload = function(e) {
+            const img = new Image();
+            img.onload = function() {
+                // リサイズ計算
+                let w = img.width, h = img.height;
+                if (w > PHOTO_MAX_WIDTH) {
+                    h = Math.round(h * PHOTO_MAX_WIDTH / w);
+                    w = PHOTO_MAX_WIDTH;
+                }
+                // Canvas で圧縮
+                const canvas = document.createElement('canvas');
+                canvas.width = w; canvas.height = h;
+                canvas.getContext('2d').drawImage(img, 0, 0, w, h);
+                const dataUrl = canvas.toDataURL('image/jpeg', PHOTO_JPEG_QUALITY);
+
+                // localStorage に保存
+                try {
+                    cfg.photoUrl = dataUrl;
+                    persistConfig();
+                    hidePhotoError();
+                    render();
+                    // 設定モーダルのプレビューも更新
+                    updateSettingsPreview(dataUrl);
+                } catch (err) {
+                    showPhotoError('사진이 너무 커서 저장할 수 없어요. 더 작은 사진을 선택해주세요 🙏');
+                }
+            };
+            img.onerror = () => showPhotoError('이미지를 불러올 수 없어요. 다른 파일을 선택해주세요');
+            img.src = e.target.result;
+        };
+        reader.onerror = () => showPhotoError('파일을 읽을 수 없어요. 다시 시도해주세요');
+        reader.readAsDataURL(file);
+    }
+
+    function removePhotoMain() {
+        cfg.photoUrl = '';
+        persistConfig();
+        document.getElementById('mainPhotoInput').value = '';
+        updateSettingsPreview('');
+        hidePhotoError();
+        render();
+    }
+
+    function showPhotoError(msg) {
+        const el = document.getElementById('photoError');
+        el.textContent = msg;
+        el.classList.add('visible');
+        // 5秒後に自動非表示
+        clearTimeout(showPhotoError._timer);
+        showPhotoError._timer = setTimeout(() => el.classList.remove('visible'), 5000);
+    }
+
+    function hidePhotoError() {
+        document.getElementById('photoError').classList.remove('visible');
     }
 
     // ハートをランダムな位置・タイミングで生成
@@ -1353,11 +1605,13 @@
     // ============================================================
     //  COUNTDOWN
     // ============================================================
-    function renderCountdown() {
-        const today    = new Date(); today.setHours(0, 0, 0, 0);
-        const meetDate = new Date(cfg.meetDate + 'T00:00:00');
-        const diffDays = Math.round((meetDate - today) / 86400000);
+    // 日付文字列を "YYYY-MM-DD" → Date オブジェクト (タイムゾーンズレなし)
+    function parseDateLocal(str) {
+        const [y, m, d] = str.split('-').map(Number);
+        return new Date(y, m - 1, d);
+    }
 
+    function renderCountdown() {
         const daysEl     = document.getElementById('daysCount');
         const sleepsEl   = document.getElementById('sleepsCount');
         const sleepsKo   = document.getElementById('sleepsKo');
@@ -1365,38 +1619,67 @@
         const badge      = document.getElementById('photoBadge');
         const numWrap    = document.getElementById('countdownNumWrap');
         const sleepsCard = document.querySelector('.sleeps-card');
-        document.getElementById('mainDateInput').value = cfg.meetDate;
+        const aitai      = document.getElementById('countdownAitai');
+        const unsetEl    = document.getElementById('unsetState');
+        const suffix     = document.getElementById('countdownSuffix');
+        const eyebrow    = document.getElementById('countdownEyebrow');
 
-        // 表示リセット
+        document.getElementById('mainDateInput').value = cfg.meetDate || '';
+
+        // --- 未設定の場合 ---
+        if (!cfg.meetDate) {
+            numWrap.style.display    = 'none';
+            sleepsCard.style.display = 'none';
+            aitai.classList.remove('visible');
+            unsetEl.classList.add('visible');
+            eyebrow.textContent = '다음 만남까지 • 次に会えるまで';
+            badge.textContent   = new Date().getFullYear();
+            dateEl.textContent  = '';
+            renderMoodCard(null);
+            return;
+        }
+
+        unsetEl.classList.remove('visible');
         numWrap.style.display    = '';
         sleepsCard.style.display = '';
 
+        const today    = new Date(); today.setHours(0, 0, 0, 0);
+        const meetDate = parseDateLocal(cfg.meetDate);
+        const diffDays = Math.round((meetDate - today) / 86400000);
+
         if (diffDays > 0) {
+            // カウントダウン中
             daysEl.textContent   = diffDays;
             sleepsEl.textContent = diffDays;
             sleepsKo.textContent = `${diffDays}번만 자면 만날 수 있어요`;
+            suffix.textContent   = '일 남았어';
+            aitai.classList.add('visible');
 
             const formatted = meetDate.toLocaleDateString('ko-KR',
                 { year: 'numeric', month: 'long', day: 'numeric', weekday: 'short' });
             dateEl.textContent = '다음 만날 날 : ' + formatted;
             badge.textContent  = meetDate.getFullYear();
+            eyebrow.textContent = '다음 만남까지 • 次に会えるまで';
 
         } else if (diffDays === 0) {
-            // 当日: カウンター非表示・today-banner表示
+            // 当日
             numWrap.style.display    = 'none';
             sleepsCard.style.display = 'none';
-            dateEl.textContent = '🎉 오늘이야! 만나러 가자!';
+            aitai.classList.remove('visible');
+            dateEl.textContent = '';
             badge.textContent  = 'TODAY';
+            eyebrow.textContent = '오늘 드디어 만나는 날';
 
         } else {
-            // 思い出モード: カウンター非表示・past-banner表示
+            // 思い出モード
             numWrap.style.display    = 'none';
             sleepsCard.style.display = 'none';
-            dateEl.textContent = '날짜를 설정해주세요';
-            badge.textContent  = new Date().getFullYear();
+            aitai.classList.remove('visible');
+            dateEl.textContent = '우리가 만난 날을 기억해요 🌸';
+            badge.textContent  = meetDate.getFullYear();
+            eyebrow.textContent = '다음 만남까지 • 次に会えるまで';
         }
 
-        // 動的ムードカード・D-タグ・フローティングハーツを更新
         renderMoodCard(diffDays);
     }
 
@@ -1426,8 +1709,6 @@
     //  SETTINGS MODAL
     // ============================================================
 
-    let pendingPhotoDataUrl = null; // file selected but not yet saved
-
     function updateSettingsPreview(src) {
         const img = document.getElementById('settingsPhotoImg');
         const ph  = document.getElementById('settingsPhotoPh');
@@ -1441,43 +1722,35 @@
         }
     }
 
-    function handleFileSelect(event) {
-        const file = event.target.files[0];
-        if (!file) return;
-        const reader = new FileReader();
-        reader.onload = function(e) {
-            pendingPhotoDataUrl = e.target.result;
-            document.getElementById('inPhoto').value = ''; // clear URL field
-            updateSettingsPreview(pendingPhotoDataUrl);
-        };
-        reader.readAsDataURL(file);
+    // date input で選択した値を一時保持 (Save 押下まで反映しない)
+    let pendingDate = null;
+
+    function onMainDatePick(event) {
+        pendingDate = event.target.value || null;
     }
 
-    function clearPhoto() {
-        pendingPhotoDataUrl = null;
-        document.getElementById('inPhoto').value = '';
-        document.getElementById('inFile').value  = '';
-        updateSettingsPreview('');
-    }
-
-    function onMainDateChange(event) {
-        const newDate = event.target.value;
-        if (!newDate) return;
-        cfg.meetDate = newDate;
+    function saveDate() {
+        const val = pendingDate || document.getElementById('mainDateInput').value;
+        if (!val) return;
+        cfg.meetDate = val;
+        pendingDate  = null;
         persistConfig();
         renderCountdown();
+        // 「Saved」フィードバックを表示後フェードアウト
+        const fb = document.getElementById('savedFeedback');
+        fb.classList.add('visible');
+        clearTimeout(saveDate._timer);
+        saveDate._timer = setTimeout(() => fb.classList.remove('visible'), 2500);
     }
 
     function openSettings() {
-        document.getElementById('inDate').value      = cfg.meetDate;
-        document.getElementById('mainDateInput').value = cfg.meetDate;
+        document.getElementById('inDate').value        = cfg.meetDate;
+        document.getElementById('mainDateInput').value = cfg.meetDate || '';
         document.getElementById('inGf').value    = cfg.girlfriendName !== '연제'      ? cfg.girlfriendName : '';
         document.getElementById('inBf').value    = cfg.boyfriendName  !== 'Boyfriend' ? cfg.boyfriendName  : '';
         document.getElementById('inMsg').value   = cfg.message;
-        // Don't show raw base64 in the URL field
+        // base64 は URL 欄に表示しない
         document.getElementById('inPhoto').value = cfg.photoUrl && !cfg.photoUrl.startsWith('data:') ? cfg.photoUrl : '';
-        document.getElementById('inFile').value  = '';
-        pendingPhotoDataUrl = null;
         updateSettingsPreview(cfg.photoUrl || '');
         document.getElementById('overlay').classList.add('open');
     }
@@ -1501,13 +1774,9 @@
         if (bf)  cfg.boyfriendName  = bf;
         if (msg) cfg.message        = msg;
 
-        // File upload takes priority over URL input
-        if (pendingPhotoDataUrl) {
-            cfg.photoUrl       = pendingPhotoDataUrl;
-            pendingPhotoDataUrl = null;
-        } else {
-            cfg.photoUrl = document.getElementById('inPhoto').value.trim();
-        }
+        // URL 入力が空でなければ適用（メイン画面アップロードの方が優先されるが、URLも有効）
+        const urlVal = document.getElementById('inPhoto').value.trim();
+        if (urlVal) cfg.photoUrl = urlVal;
 
         persistConfig();
         closeSettings();
