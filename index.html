@@ -745,6 +745,72 @@
         .btn-cancel:hover { background: rgba(255,182,193,0.08); }
 
         /* ================================================
+           PHOTO UPLOAD (settings modal)
+        ================================================ */
+        .settings-photo-preview {
+            width: 100%;
+            height: 150px;
+            border-radius: 18px;
+            overflow: hidden;
+            margin-bottom: 14px;
+            background: linear-gradient(135deg, var(--pink-light), var(--lavender));
+            border: 1.5px solid rgba(255,182,193,0.4);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            position: relative;
+        }
+        .settings-photo-preview img {
+            width: 100%; height: 100%;
+            object-fit: cover; display: none;
+        }
+        .settings-photo-preview img.visible { display: block; }
+        .settings-photo-ph { font-size: 38px; opacity: 0.45; }
+
+        .btn-file-pick {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+            width: 100%;
+            padding: 15px;
+            background: linear-gradient(135deg, var(--pink-light), var(--lavender));
+            border: 1.5px dashed rgba(232,83,138,0.45);
+            border-radius: 16px;
+            font-size: 14px;
+            font-weight: 600;
+            color: var(--text-mid);
+            cursor: pointer;
+            transition: border-color 0.2s, background 0.2s;
+            font-family: inherit;
+        }
+        .btn-file-pick:hover {
+            border-color: rgba(232,83,138,0.7);
+            background: linear-gradient(135deg, rgba(255,182,193,0.45), rgba(201,127,224,0.35));
+        }
+        .form-or {
+            text-align: center;
+            font-size: 11px;
+            color: var(--text-soft);
+            letter-spacing: 2px;
+            margin: 14px 0 10px;
+        }
+        .btn-clear-photo {
+            width: 100%;
+            padding: 11px;
+            background: none;
+            border: 1.5px solid rgba(255,182,193,0.3);
+            border-radius: 14px;
+            color: var(--text-soft);
+            font-size: 12px;
+            font-family: inherit;
+            cursor: pointer;
+            margin-top: 10px;
+            transition: background 0.2s, color 0.2s;
+        }
+        .btn-clear-photo:hover { background: rgba(255,182,193,0.12); color: var(--pink-deep); }
+
+        /* ================================================
            RESPONSIVE — wider screens
         ================================================ */
         @media (min-width: 430px) {
@@ -993,14 +1059,29 @@
 
         <!-- Photo -->
         <p class="form-section">📸 사진 설정 (Photo)</p>
-        <div class="form-group">
-            <label class="form-label" for="inPhoto">사진 URL / Photo URL</label>
-            <input type="url" class="form-input" id="inPhoto" placeholder="https://example.com/photo.jpg">
-            <p class="form-hint">
-                ※ For local images, place the file in the same folder as index.html and enter the filename (e.g. photo.jpg)<br>
-                ※ 로컬 이미지는 HTML과 같은 폴더에 저장 후 파일명만 입력 (예: photo.jpg)
-            </p>
+
+        <!-- Preview -->
+        <div class="settings-photo-preview">
+            <img id="settingsPhotoImg" src="" alt="preview">
+            <span class="settings-photo-ph" id="settingsPhotoPh">📷</span>
         </div>
+
+        <!-- File picker -->
+        <div class="form-group">
+            <label class="btn-file-pick" for="inFile">
+                📁 디바이스에서 선택 / Choose from Device
+            </label>
+            <input type="file" id="inFile" accept="image/*" style="display:none" onchange="handleFileSelect(event)">
+        </div>
+
+        <!-- URL input as alternative -->
+        <div class="form-or">— or enter URL —</div>
+        <div class="form-group">
+            <label class="form-label" for="inPhoto">URL 입력 / Enter URL</label>
+            <input type="url" class="form-input" id="inPhoto" placeholder="https://example.com/photo.jpg">
+        </div>
+
+        <button type="button" class="btn-clear-photo" onclick="clearPhoto()">🗑 사진 삭제 / Remove Photo</button>
 
         <button class="btn-save" onclick="saveSettings()">저장하기 / Save 💕</button>
         <button class="btn-cancel" onclick="closeSettings()">닫기 / Close</button>
@@ -1305,12 +1386,51 @@
     // ============================================================
     //  SETTINGS MODAL
     // ============================================================
+
+    let pendingPhotoDataUrl = null; // file selected but not yet saved
+
+    function updateSettingsPreview(src) {
+        const img = document.getElementById('settingsPhotoImg');
+        const ph  = document.getElementById('settingsPhotoPh');
+        if (src) {
+            img.src = src;
+            img.classList.add('visible');
+            ph.style.display = 'none';
+        } else {
+            img.classList.remove('visible');
+            ph.style.display = '';
+        }
+    }
+
+    function handleFileSelect(event) {
+        const file = event.target.files[0];
+        if (!file) return;
+        const reader = new FileReader();
+        reader.onload = function(e) {
+            pendingPhotoDataUrl = e.target.result;
+            document.getElementById('inPhoto').value = ''; // clear URL field
+            updateSettingsPreview(pendingPhotoDataUrl);
+        };
+        reader.readAsDataURL(file);
+    }
+
+    function clearPhoto() {
+        pendingPhotoDataUrl = null;
+        document.getElementById('inPhoto').value = '';
+        document.getElementById('inFile').value  = '';
+        updateSettingsPreview('');
+    }
+
     function openSettings() {
         document.getElementById('inDate').value  = cfg.meetDate;
         document.getElementById('inGf').value    = cfg.girlfriendName !== '연제'      ? cfg.girlfriendName : '';
         document.getElementById('inBf').value    = cfg.boyfriendName  !== 'Boyfriend' ? cfg.boyfriendName  : '';
         document.getElementById('inMsg').value   = cfg.message;
-        document.getElementById('inPhoto').value = cfg.photoUrl || '';
+        // Don't show raw base64 in the URL field
+        document.getElementById('inPhoto').value = cfg.photoUrl && !cfg.photoUrl.startsWith('data:') ? cfg.photoUrl : '';
+        document.getElementById('inFile').value  = '';
+        pendingPhotoDataUrl = null;
+        updateSettingsPreview(cfg.photoUrl || '');
         document.getElementById('overlay').classList.add('open');
     }
 
@@ -1327,13 +1447,19 @@
         const gf  = document.getElementById('inGf').value.trim();
         const bf  = document.getElementById('inBf').value.trim();
         const msg = document.getElementById('inMsg').value.trim();
-        const ph  = document.getElementById('inPhoto').value.trim();
 
-        if (d)   cfg.meetDate        = d;
-        if (gf)  cfg.girlfriendName  = gf;
-        if (bf)  cfg.boyfriendName   = bf;
-        if (msg) cfg.message         = msg;
-        cfg.photoUrl = ph;  // 空文字での上書きも許可（写真削除）
+        if (d)   cfg.meetDate       = d;
+        if (gf)  cfg.girlfriendName = gf;
+        if (bf)  cfg.boyfriendName  = bf;
+        if (msg) cfg.message        = msg;
+
+        // File upload takes priority over URL input
+        if (pendingPhotoDataUrl) {
+            cfg.photoUrl       = pendingPhotoDataUrl;
+            pendingPhotoDataUrl = null;
+        } else {
+            cfg.photoUrl = document.getElementById('inPhoto').value.trim();
+        }
 
         persistConfig();
         closeSettings();
