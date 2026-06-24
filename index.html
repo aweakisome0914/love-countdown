@@ -18,6 +18,11 @@
     <!-- Google Fonts (Korean / Japanese) — remove this line if offline -->
     <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@300;400;500;700&display=swap" rel="stylesheet">
 
+    <!-- Firebase SDK (compat) — photo cloud sync -->
+    <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-storage-compat.js"></script>
+
     <style>
         /* ================================================
            CSS VARIABLES — ここで色を変えられます
@@ -252,6 +257,20 @@
             line-height: 1.5;
         }
         .photo-error.visible { display: block; }
+        /* Uploading / Synced ステータス */
+        .sync-status {
+            display: none;
+            margin-top: 10px;
+            padding: 10px 16px;
+            border-radius: 14px;
+            font-size: 12px;
+            text-align: center;
+            line-height: 1.5;
+        }
+        .sync-status.visible   { display: block; }
+        .sync-status.uploading { background: rgba(232,83,138,0.08); color: var(--pink-deep); }
+        .sync-status.synced    { background: rgba(80,200,120,0.09); color: #2e7d46; }
+        .sync-status.error     { background: rgba(255,82,82,0.08);  color: #c0392b; }
 
         /* ================================================
            COUNTDOWN MAIN SECTION
@@ -1048,6 +1067,9 @@
         <!-- エラーメッセージ (韓国語) -->
         <div class="photo-error" id="photoError"></div>
 
+        <!-- アップロード / 同期ステータス -->
+        <div class="sync-status" id="syncStatus"></div>
+
     </section>
 
     <!-- ── COUNTDOWN ── -->
@@ -1300,6 +1322,98 @@
 
 <script>
     // ============================================================
+    //  FIREBASE 설정
+    //  Firebase Console → Project Settings → Your apps → SDK setup
+    //  아래 값을 자신의 Firebase 프로젝트 정보로 교체해주세요
+    //
+    //  IMPORTANT (보안):
+    //  현재 document ID가 고정이므로 URL을 아는 누구나 읽고 쓸 수 있습니다.
+    //  본번 운용에서는 Firebase Authentication 으로 유저 인증을 실시해주세요.
+    // ============================================================
+    const FIREBASE_CONFIG = {
+        apiKey:            "YOUR_API_KEY",
+        authDomain:        "YOUR_PROJECT.firebaseapp.com",
+        projectId:         "YOUR_PROJECT_ID",
+        storageBucket:     "YOUR_PROJECT.appspot.com",
+        messagingSenderId: "YOUR_SENDER_ID",
+        appId:             "YOUR_APP_ID",
+    };
+    // Firestore に保存するドキュメント ID (本番ではユーザーIDを使うこと)
+    const FS_DOC_ID = 'couple-data';
+
+    // Firebase が設定済みかチェック (未設定ならローカルのみ)
+    function isFirebaseReady() {
+        return FIREBASE_CONFIG.apiKey && FIREBASE_CONFIG.apiKey !== 'YOUR_API_KEY';
+    }
+
+    // Firebase 初期化 (設定されている場合のみ)
+    let _db = null, _storage = null;
+    function initFirebase() {
+        if (!isFirebaseReady()) return;
+        try {
+            if (!firebase.apps.length) firebase.initializeApp(FIREBASE_CONFIG);
+            _db      = firebase.firestore();
+            _storage = firebase.storage();
+        } catch (e) { console.warn('Firebase init failed:', e); }
+    }
+
+    // ============================================================
+    //  FIRESTORE — クラウド同期
+    // ============================================================
+
+    // Firestore からデータを読み込む
+    async function loadFromFirestore() {
+        if (!_db) return null;
+        try {
+            const snap = await _db.collection('love-app').doc(FS_DOC_ID).get();
+            return snap.exists ? snap.data() : null;
+        } catch (e) { console.warn('Firestore load error:', e); return null; }
+    }
+
+    // Firestore にデータをマージ保存
+    async function syncToFirestore(data) {
+        if (!_db) return;
+        await _db.collection('love-app').doc(FS_DOC_ID).set(
+            { ...data, updatedAt: firebase.firestore.FieldValue.serverTimestamp() },
+            { merge: true }
+        );
+    }
+
+    // ============================================================
+    //  FIREBASE STORAGE — 画像アップロード
+    // ============================================================
+
+    // dataUrl (base64) → Storage にアップロード → download URL を返す
+    async function uploadToStorage(dataUrl) {
+        if (!_storage) throw new Error('Storage not ready');
+        const res  = await fetch(dataUrl);
+        const blob = await res.blob();
+        const ref  = _storage.ref('photos/couple-photo.jpg');
+        const snap = await ref.put(blob, { contentType: 'image/jpeg' });
+        return snap.ref.getDownloadURL();
+    }
+
+    // Storage から画像を削除
+    async function deleteFromStorage() {
+        if (!_storage) return;
+        try { await _storage.ref('photos/couple-photo.jpg').delete(); } catch (_) {}
+    }
+
+    // ============================================================
+    //  SYNC STATUS UI
+    // ============================================================
+    function showSync(state, msg) {
+        const el = document.getElementById('syncStatus');
+        el.className = 'sync-status visible ' + state;
+        el.textContent = msg;
+        if (state !== 'uploading') {
+            clearTimeout(showSync._t);
+            showSync._t = setTimeout(() => el.classList.remove('visible'), 3000);
+        }
+    }
+    function hideSync() { document.getElementById('syncStatus').classList.remove('visible'); }
+
+    // ============================================================
     //  DEFAULT SETTINGS
     //  ここで初期値を直接変更できます
     // ============================================================
@@ -1473,7 +1587,7 @@
     const PHOTO_MAX_WIDTH   = 1200;  // リサイズ上限 px
     const PHOTO_JPEG_QUALITY = 0.78; // JPEG 圧縮品質 (0〜1)
 
-    function handleMainPhotoSelect(file) {
+    async function handleMainPhotoSelect(file) {
         if (!file) return;
 
         // ファイル形式チェック
@@ -1483,48 +1597,75 @@
             return;
         }
 
-        const reader = new FileReader();
-        reader.onload = function(e) {
-            const img = new Image();
-            img.onload = function() {
-                // リサイズ計算
-                let w = img.width, h = img.height;
-                if (w > PHOTO_MAX_WIDTH) {
-                    h = Math.round(h * PHOTO_MAX_WIDTH / w);
-                    w = PHOTO_MAX_WIDTH;
-                }
-                // Canvas で圧縮
-                const canvas = document.createElement('canvas');
-                canvas.width = w; canvas.height = h;
-                canvas.getContext('2d').drawImage(img, 0, 0, w, h);
-                const dataUrl = canvas.toDataURL('image/jpeg', PHOTO_JPEG_QUALITY);
-
-                // localStorage に保存
-                try {
-                    cfg.photoUrl = dataUrl;
-                    persistConfig();
-                    hidePhotoError();
-                    render();
-                    // 設定モーダルのプレビューも更新
-                    updateSettingsPreview(dataUrl);
-                } catch (err) {
-                    showPhotoError('사진이 너무 커서 저장할 수 없어요. 더 작은 사진을 선택해주세요 🙏');
-                }
+        // Canvas 圧縮 → dataUrl 取得
+        const dataUrl = await new Promise((resolve, reject) => {
+            const reader = new FileReader();
+            reader.onload = e => {
+                const img = new Image();
+                img.onload = () => {
+                    let w = img.width, h = img.height;
+                    if (w > PHOTO_MAX_WIDTH) { h = Math.round(h * PHOTO_MAX_WIDTH / w); w = PHOTO_MAX_WIDTH; }
+                    const canvas = document.createElement('canvas');
+                    canvas.width = w; canvas.height = h;
+                    canvas.getContext('2d').drawImage(img, 0, 0, w, h);
+                    resolve(canvas.toDataURL('image/jpeg', PHOTO_JPEG_QUALITY));
+                };
+                img.onerror = () => reject(new Error('image load failed'));
+                img.src = e.target.result;
             };
-            img.onerror = () => showPhotoError('이미지를 불러올 수 없어요. 다른 파일을 선택해주세요');
-            img.src = e.target.result;
-        };
-        reader.onerror = () => showPhotoError('파일을 읽을 수 없어요. 다시 시도해주세요');
-        reader.readAsDataURL(file);
+            reader.onerror = () => reject(new Error('file read failed'));
+            reader.readAsDataURL(file);
+        }).catch(err => { showPhotoError('이미지를 불러올 수 없어요. 다른 파일을 선택해주세요'); return null; });
+
+        if (!dataUrl) return;
+
+        // Firebase が設定されている場合はクラウドにアップロード
+        if (isFirebaseReady()) {
+            showSync('uploading', 'Uploading...');
+            try {
+                const downloadURL = await uploadToStorage(dataUrl);
+                cfg.photoUrl = downloadURL;
+                await syncToFirestore({ photoURL: downloadURL });
+                persistConfig();
+                hidePhotoError();
+                render();
+                updateSettingsPreview(downloadURL);
+                showSync('synced', '✓ Synced');
+            } catch (err) {
+                showSync('error', '사진을 저장하지 못했어요. 다시 시도해줘 🙏');
+                console.error('Upload failed:', err);
+            }
+        } else {
+            // Firebase 未設定 → base64 で localStorage に保存
+            try {
+                cfg.photoUrl = dataUrl;
+                persistConfig();
+                hidePhotoError();
+                render();
+                updateSettingsPreview(dataUrl);
+            } catch (err) {
+                showPhotoError('사진이 너무 커서 저장할 수 없어요. 더 작은 사진을 선택해주세요 🙏');
+            }
+        }
     }
 
-    function removePhotoMain() {
+    async function removePhotoMain() {
         cfg.photoUrl = '';
         persistConfig();
         document.getElementById('mainPhotoInput').value = '';
         updateSettingsPreview('');
         hidePhotoError();
         render();
+        if (isFirebaseReady()) {
+            showSync('uploading', 'Removing...');
+            try {
+                await deleteFromStorage();
+                await syncToFirestore({ photoURL: '' });
+                showSync('synced', '✓ Removed');
+            } catch (e) {
+                showSync('error', '삭제 중 오류가 발생했어요');
+            }
+        }
     }
 
     function showPhotoError(msg) {
@@ -1729,7 +1870,7 @@
         pendingDate = event.target.value || null;
     }
 
-    function saveDate() {
+    async function saveDate() {
         const val = pendingDate || document.getElementById('mainDateInput').value;
         if (!val) return;
         cfg.meetDate = val;
@@ -1741,6 +1882,10 @@
         fb.classList.add('visible');
         clearTimeout(saveDate._timer);
         saveDate._timer = setTimeout(() => fb.classList.remove('visible'), 2500);
+        // Firestore 同期
+        if (isFirebaseReady()) {
+            try { await syncToFirestore({ nextMeetingDate: val }); } catch (_) {}
+        }
     }
 
     function openSettings() {
@@ -1763,7 +1908,7 @@
         if (e.target === document.getElementById('overlay')) closeSettings();
     }
 
-    function saveSettings() {
+    async function saveSettings() {
         const d   = document.getElementById('inDate').value;
         const gf  = document.getElementById('inGf').value.trim();
         const bf  = document.getElementById('inBf').value.trim();
@@ -1774,24 +1919,54 @@
         if (bf)  cfg.boyfriendName  = bf;
         if (msg) cfg.message        = msg;
 
-        // URL 入力が空でなければ適用（メイン画面アップロードの方が優先されるが、URLも有効）
         const urlVal = document.getElementById('inPhoto').value.trim();
         if (urlVal) cfg.photoUrl = urlVal;
 
         persistConfig();
         closeSettings();
         render();
+
+        // Firestore 同期
+        if (isFirebaseReady()) {
+            try {
+                await syncToFirestore({
+                    nextMeetingDate: cfg.meetDate,
+                    girlfriendName:  cfg.girlfriendName,
+                    boyfriendName:   cfg.boyfriendName,
+                    loveMessage:     cfg.message,
+                    photoURL:        cfg.photoUrl,
+                });
+            } catch (_) {}
+        }
     }
 
     // ============================================================
     //  INIT
     // ============================================================
-    function init() {
-        loadConfig();
+    async function init() {
+        initFirebase();
+        loadConfig(); // まず localStorage から読み込む（高速に表示）
         render();
         renderTimes();
         setInterval(renderTimes, 1000);      // 時計を毎秒更新
         setInterval(renderCountdown, 60000); // カウントダウンを毎分更新
+
+        // Firestore が設定されている場合、クラウドデータで上書き
+        if (isFirebaseReady()) {
+            try {
+                const data = await loadFromFirestore();
+                if (data) {
+                    // Firestore のデータで cfg を上書き（空文字は除外）
+                    if (data.photoURL        != null) cfg.photoUrl        = data.photoURL;
+                    if (data.nextMeetingDate)         cfg.meetDate         = data.nextMeetingDate;
+                    if (data.boyfriendName)           cfg.boyfriendName    = data.boyfriendName;
+                    if (data.girlfriendName)          cfg.girlfriendName   = data.girlfriendName;
+                    if (data.loveMessage)             cfg.message          = data.loveMessage;
+                    persistConfig(); // ローカルにキャッシュ
+                    render();        // 最新データで再描画
+                }
+            } catch (e) { console.warn('Firestore sync error:', e); }
+        }
     }
 
     document.addEventListener('DOMContentLoaded', init);
