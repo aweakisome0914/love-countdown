@@ -745,38 +745,35 @@
         .btn-cancel:hover { background: rgba(255,182,193,0.08); }
 
         /* ================================================
-           DATE CHANGE BUTTON (main screen)
-           input を透明にしてボタンの上に重ねる — iOS対応
+           DATE PICKER (main screen) — input 直接スタイリング
         ================================================ */
         .date-change-wrap { text-align: center; margin-top: 10px; }
-        .date-btn-wrap {
-            position: relative;
+        .main-date-input {
+            -webkit-appearance: none;
+            appearance: none;
             display: inline-block;
-        }
-        .btn-date-change {
-            display: inline-flex;
-            align-items: center;
-            gap: 6px;
-            padding: 10px 22px;
+            padding: 10px 18px;
             background: linear-gradient(135deg, var(--pink-light), var(--lavender));
-            border: 1.5px solid rgba(232,83,138,0.3);
+            border: 1.5px solid rgba(232,83,138,0.35);
             border-radius: 22px;
-            font-size: 13px;
+            font-size: 14px;
             font-weight: 600;
             color: var(--text-mid);
             font-family: inherit;
-            letter-spacing: 0.5px;
-            pointer-events: none; /* タップは上の input が受け取る */
-        }
-        /* 透明な date input をボタン全体に被せる */
-        .main-date-input {
-            position: absolute;
-            inset: 0;
-            width: 100%;
-            height: 100%;
-            opacity: 0;
             cursor: pointer;
-            font-size: 16px; /* iOSズーム防止 */
+            outline: none;
+            transition: box-shadow 0.2s, border-color 0.2s;
+            letter-spacing: 0.3px;
+        }
+        .main-date-input:hover,
+        .main-date-input:focus {
+            box-shadow: 0 4px 16px var(--shadow-pink);
+            border-color: rgba(232,83,138,0.6);
+        }
+        .main-date-input::-webkit-calendar-picker-indicator {
+            cursor: pointer;
+            opacity: 0.6;
+            margin-left: 4px;
         }
 
         /* ================================================
@@ -939,16 +936,11 @@
         <!-- メインメッセージ (設定画面で変更可能) -->
         <p class="main-message" id="mainMessage">조금만 더 기다리자 💕</p>
 
-        <!-- 日付表示 + タップで変更できるボタン (iOS対応) -->
+        <!-- 日付表示 + 直接選択できる input -->
         <div class="date-change-wrap">
             <p class="meet-date-text" id="meetDateText">다음 만날 날 : 설정해주세요</p>
-            <div class="date-btn-wrap">
-                <!-- 見た目のボタン -->
-                <span class="btn-date-change">📅 날짜 변경 / Change Date</span>
-                <!-- 透明な date input がボタン全体を覆ってタップを受け取る -->
-                <input type="date" id="mainDateInput" class="main-date-input"
-                       onchange="onMainDateChange(event)">
-            </div>
+            <input type="date" id="mainDateInput" class="main-date-input"
+                   onchange="onMainDateChange(event)">
         </div>
 
         <!-- フローティングハーツ — 7日以内に自動表示 (JS制御) -->
