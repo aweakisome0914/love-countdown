@@ -1,0 +1,1358 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>우리의 카운트다운 💕</title>
+
+    <!--
+    ╔══════════════════════════════════════════════════════════════╗
+    ║  LOVE COUNTDOWN — 우리의 카운트다운                            ║
+    ║  韓国(ソウル) ↔ タイ(バンコク) 遠距離カップル用                    ║
+    ║                                                              ║
+    ║  主な設定は下の<script>内の DEFAULT_SETTINGS を変更してください    ║
+    ║  날짜·이름·메시지는 ⚙️ 버튼으로도 변경 가능합니다                  ║
+    ╚══════════════════════════════════════════════════════════════╝
+    -->
+
+    <!-- Google Fonts (Korean / Japanese) — remove this line if offline -->
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@300;400;500;700&display=swap" rel="stylesheet">
+
+    <style>
+        /* ================================================
+           CSS VARIABLES — ここで色を変えられます
+        ================================================ */
+        :root {
+            --pink:         #FFB6C1;
+            --pink-deep:    #E8538A;
+            --pink-light:   #FFE4EC;
+            --lavender:     #EAD5F5;
+            --lavender-mid: #C97FE0;
+            --lavender-deep:#9B59B6;
+            --beige:        #FFF8F0;
+            --white:        #FFFFFF;
+            --text-dark:    #3D2B3D;
+            --text-mid:     #7A5070;
+            --text-soft:    #B89AAA;
+            --shadow-pink:  rgba(232, 83, 138, 0.22);
+            --shadow-lav:   rgba(201, 127, 224, 0.18);
+            --card-bg:      rgba(255,255,255,0.82);
+        }
+
+        /* ================================================
+           RESET & BASE
+        ================================================ */
+        *, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
+
+        html { scroll-behavior: smooth; }
+
+        body {
+            font-family: 'Noto Sans KR', -apple-system, BlinkMacSystemFont,
+                         'Hiragino Kaku Gothic ProN', 'Yu Gothic', sans-serif;
+            background: linear-gradient(150deg, #FFE8EF 0%, #F5E8FF 50%, #FFE8F5 100%);
+            min-height: 100vh;
+            color: var(--text-dark);
+            -webkit-font-smoothing: antialiased;
+        }
+
+        /* iPhone-width コンテナ */
+        .app {
+            max-width: 430px;
+            margin: 0 auto;
+            min-height: 100vh;
+            background: linear-gradient(165deg, #FFFAFC 0%, #F8F0FF 55%, #FFF0F8 100%);
+            position: relative;
+            overflow-x: hidden;
+            box-shadow: 0 0 60px rgba(200, 100, 180, 0.12);
+        }
+
+        /* ================================================
+           DECORATIVE BLOBS
+        ================================================ */
+        .blob {
+            position: fixed;
+            border-radius: 50%;
+            filter: blur(60px);
+            pointer-events: none;
+            z-index: 0;
+            opacity: 0.18;
+        }
+        .blob-1 { width: 260px; height: 260px; background: var(--pink-deep); top: -80px; right: -60px; }
+        .blob-2 { width: 200px; height: 200px; background: var(--lavender-mid); bottom: 80px; left: -70px; }
+        .blob-3 { width: 120px; height: 120px; background: var(--pink-deep); top: 45%; right: -30px; }
+
+        /* ================================================
+           HEADER
+        ================================================ */
+        .header {
+            padding: 54px 20px 16px;
+            text-align: center;
+            position: relative;
+            z-index: 1;
+        }
+        .header-eyebrow {
+            font-size: 11px;
+            letter-spacing: 3.5px;
+            color: var(--text-soft);
+            text-transform: uppercase;
+            margin-bottom: 8px;
+        }
+        .header-title {
+            font-size: 22px;
+            font-weight: 700;
+            color: var(--text-dark);
+            letter-spacing: 0.5px;
+            line-height: 1.3;
+        }
+        .header-sub {
+            font-size: 13px;
+            color: var(--text-soft);
+            margin-top: 6px;
+            letter-spacing: 1px;
+        }
+        .settings-btn {
+            position: absolute;
+            top: 54px;
+            right: 18px;
+            background: var(--card-bg);
+            border: 1.5px solid rgba(255,182,193,0.5);
+            border-radius: 50%;
+            width: 40px;
+            height: 40px;
+            font-size: 18px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            box-shadow: 0 3px 12px var(--shadow-pink);
+            transition: transform 0.35s ease, box-shadow 0.2s;
+        }
+        .settings-btn:hover { transform: rotate(80deg); box-shadow: 0 5px 18px var(--shadow-pink); }
+
+        /* ================================================
+           PHOTO SECTION
+        ================================================ */
+        .photo-section {
+            padding: 8px 24px 0;
+            text-align: center;
+            position: relative;
+            z-index: 1;
+        }
+        .photo-frame {
+            width: 100%;
+            height: 270px;
+            border-radius: 28px;
+            overflow: hidden;
+            position: relative;
+            background: linear-gradient(135deg, var(--pink-light) 0%, var(--lavender) 100%);
+            box-shadow: 0 10px 40px var(--shadow-pink), 0 2px 8px var(--shadow-lav);
+            border: 2.5px solid rgba(255,255,255,0.9);
+        }
+        .photo-frame img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            display: none;
+            transition: opacity 0.4s ease;
+        }
+        .photo-frame img.visible { display: block; }
+        .photo-placeholder {
+            width: 100%;
+            height: 100%;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
+        }
+        .photo-placeholder-emoji { font-size: 52px; opacity: 0.55; }
+        .photo-placeholder-text {
+            font-size: 13px;
+            color: var(--text-mid);
+            text-align: center;
+            line-height: 1.8;
+            font-weight: 300;
+        }
+        /* 年バッジ */
+        .photo-badge {
+            position: absolute;
+            top: 14px;
+            right: 14px;
+            background: rgba(255,255,255,0.88);
+            backdrop-filter: blur(8px);
+            border-radius: 30px;
+            padding: 4px 12px;
+            font-size: 11px;
+            color: var(--text-mid);
+            font-weight: 500;
+            letter-spacing: 1px;
+        }
+        /* ハートのキラキラ装飾 */
+        .photo-deco {
+            position: absolute;
+            bottom: 14px;
+            left: 14px;
+            font-size: 11px;
+            color: rgba(255,255,255,0.9);
+            letter-spacing: 4px;
+            text-shadow: 0 1px 4px rgba(200,80,140,0.4);
+        }
+
+        /* ================================================
+           COUNTDOWN MAIN SECTION
+        ================================================ */
+        .countdown-section {
+            padding: 24px 24px 20px;
+            text-align: center;
+            position: relative;
+            z-index: 1;
+        }
+        .countdown-eyebrow {
+            font-size: 11px;
+            letter-spacing: 3px;
+            color: var(--text-soft);
+            margin-bottom: 10px;
+            text-transform: uppercase;
+        }
+
+        /* 大きな日数 */
+        .countdown-number-wrap {
+            display: flex;
+            align-items: baseline;
+            justify-content: center;
+            gap: 4px;
+            margin-bottom: 6px;
+        }
+        .countdown-prefix {
+            font-size: 22px;
+            font-weight: 300;
+            color: var(--text-mid);
+        }
+        .countdown-days {
+            font-size: 88px;
+            font-weight: 700;
+            line-height: 1;
+            background: linear-gradient(135deg, var(--pink-deep) 0%, var(--lavender-mid) 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            animation: countPulse 3s ease-in-out infinite;
+        }
+        .countdown-suffix {
+            font-size: 22px;
+            font-weight: 300;
+            color: var(--text-mid);
+        }
+        @keyframes countPulse {
+            0%, 100% { filter: brightness(1); }
+            50%       { filter: brightness(1.12); }
+        }
+
+        /* 「あと○回寝たら」カード */
+        .sleeps-card {
+            background: var(--card-bg);
+            border-radius: 22px;
+            padding: 16px 20px;
+            margin: 16px auto 0;
+            max-width: 310px;
+            box-shadow: 0 5px 20px var(--shadow-pink);
+            border: 1.5px solid rgba(255,182,193,0.35);
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+        .sleeps-icon { font-size: 28px; flex-shrink: 0; }
+        .sleeps-text-wrap { text-align: left; }
+        .sleeps-main {
+            font-size: 14px;
+            color: var(--text-mid);
+            line-height: 1.5;
+        }
+        .sleeps-num {
+            font-weight: 700;
+            color: var(--pink-deep);
+            font-size: 16px;
+        }
+        .sleeps-ko {
+            font-size: 11px;
+            color: var(--text-soft);
+            margin-top: 2px;
+        }
+
+        /* メインメッセージ */
+        .main-message {
+            font-size: 18px;
+            font-weight: 500;
+            color: var(--lavender-deep);
+            margin-top: 20px;
+            letter-spacing: 0.5px;
+            animation: fadeFloat 4s ease-in-out infinite;
+        }
+        @keyframes fadeFloat {
+            0%, 100% { opacity: 0.85; transform: translateY(0); }
+            50%       { opacity: 1;    transform: translateY(-3px); }
+        }
+        .meet-date-text {
+            font-size: 12px;
+            color: var(--text-soft);
+            margin-top: 8px;
+            letter-spacing: 1px;
+        }
+
+        /* ================================================
+           MOOD CARD — 残り日数に応じた動的メッセージ
+           level-* クラスで色を制御。レベル順: far→month→twoweeks→week→urgent→eve
+        ================================================ */
+        .mood-card {
+            border-radius: 24px;
+            padding: 20px 22px;
+            margin: 20px auto 0;
+            max-width: 340px;
+            opacity: 0;
+            transform: translateY(12px);
+            transition: opacity 0.55s ease, transform 0.55s ease;
+            border: 1.5px solid rgba(255,182,193,0.3);
+        }
+        .mood-card.visible { opacity: 1; transform: translateY(0); }
+        .mood-emoji { font-size: 22px; display: block; margin-bottom: 8px; }
+        .mood-ko {
+            font-size: 15px;
+            font-weight: 500;
+            color: var(--text-dark);
+            line-height: 1.7;
+            margin-bottom: 6px;
+        }
+        .mood-ja { font-size: 11px; color: var(--text-soft); line-height: 1.6; font-weight: 300; }
+
+        /* 残り日数が減るほど背景が鮮やかに */
+        .mood-card.level-far      { background: linear-gradient(135deg, rgba(255,228,236,0.6), rgba(234,213,245,0.5)); }
+        .mood-card.level-month    { background: linear-gradient(135deg, rgba(255,205,222,0.7), rgba(218,182,245,0.6)); }
+        .mood-card.level-twoweeks { background: linear-gradient(135deg, rgba(255,175,208,0.75), rgba(198,150,240,0.65)); border-color: rgba(232,83,138,0.3); }
+        .mood-card.level-week     { background: linear-gradient(135deg, rgba(255,138,183,0.82), rgba(176,116,236,0.72)); border-color: rgba(232,83,138,0.45); animation: moodGlow 3s ease-in-out infinite; }
+        .mood-card.level-urgent   { background: linear-gradient(135deg, rgba(233,78,146,0.88), rgba(153,86,223,0.78)); border-color: rgba(232,83,138,0.6);  animation: moodGlow 2s ease-in-out infinite; }
+        .mood-card.level-eve      { background: linear-gradient(135deg, rgba(218,58,133,0.93), rgba(128,63,208,0.86)); border-color: rgba(232,83,138,0.8);  animation: moodGlow 1.5s ease-in-out infinite; }
+        .mood-card.level-past     { background: linear-gradient(135deg, rgba(238,228,252,0.6), rgba(255,238,248,0.5)); border-color: rgba(178,148,200,0.3); }
+
+        /* week / urgent / eve はテキストを白に */
+        .mood-card.level-week .mood-ko,
+        .mood-card.level-urgent .mood-ko,
+        .mood-card.level-eve .mood-ko  { color: #fff; }
+        .mood-card.level-week .mood-ja,
+        .mood-card.level-urgent .mood-ja,
+        .mood-card.level-eve .mood-ja  { color: rgba(255,255,255,0.82); }
+
+        @keyframes moodGlow {
+            0%, 100% { box-shadow: 0 5px 20px rgba(232,83,138,0.28); }
+            50%       { box-shadow: 0 10px 36px rgba(232,83,138,0.60); }
+        }
+
+        /* ================================================
+           D-TAG — D-3 / D-2 / D-1 の大きなバッジ
+        ================================================ */
+        .d-tag-wrap { display: none; justify-content: center; margin-bottom: 4px; }
+        .d-tag-wrap.visible { display: flex; }
+        .d-tag {
+            font-size: 62px;
+            font-weight: 700;
+            letter-spacing: -2px;
+            line-height: 1;
+            background: linear-gradient(135deg, var(--pink-deep), var(--lavender-mid));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            animation: dTagPop 0.55s cubic-bezier(0.34, 1.56, 0.64, 1) both;
+        }
+        @keyframes dTagPop {
+            from { transform: scale(0.4); opacity: 0; }
+            to   { transform: scale(1);   opacity: 1; }
+        }
+
+        /* ================================================
+           TODAY BANNER — D-Day 당일 특별 표시
+        ================================================ */
+        .today-banner {
+            display: none;
+            background: linear-gradient(135deg, #FFDDEE 0%, #E6D4FF 100%);
+            border-radius: 26px;
+            padding: 26px 20px 22px;
+            margin: 16px auto 0;
+            max-width: 340px;
+            text-align: center;
+            border: 2px solid rgba(255,182,193,0.55);
+            animation: todayShine 2.5s ease-in-out infinite;
+        }
+        .today-banner.visible { display: block; }
+        .today-confetti { font-size: 30px; display: block; margin-bottom: 10px; animation: spin 5s linear infinite; display: inline-block; }
+        .today-banner-en { font-size: 19px; font-weight: 700; color: var(--pink-deep); letter-spacing: 0.5px; margin: 8px 0; }
+        .today-banner-ko { font-size: 14px; color: var(--text-mid); line-height: 1.85; }
+        @keyframes todayShine {
+            0%, 100% { box-shadow: 0 8px 36px rgba(232,83,138,0.32); }
+            50%       { box-shadow: 0 14px 54px rgba(232,83,138,0.64); }
+        }
+        @keyframes spin { to { transform: rotate(360deg); } }
+
+        /* ================================================
+           PAST BANNER — 思い出モード (会う日を過ぎた場合)
+        ================================================ */
+        .past-banner {
+            display: none;
+            background: linear-gradient(135deg, rgba(238,230,252,0.7), rgba(255,240,250,0.6));
+            border-radius: 24px;
+            padding: 24px 20px;
+            margin: 16px auto 0;
+            max-width: 340px;
+            text-align: center;
+            border: 1.5px solid rgba(178,148,200,0.3);
+        }
+        .past-banner.visible { display: block; }
+        .past-banner-ko { font-size: 18px; font-weight: 500; color: var(--lavender-deep); margin-bottom: 6px; }
+        .past-banner-ja { font-size: 12px; color: var(--text-soft); }
+
+        /* ================================================
+           FLOATING HEARTS — 7日以内の演出
+        ================================================ */
+        .hearts-float-wrap { position: relative; height: 0; overflow: visible; pointer-events: none; }
+        .heart-float {
+            position: absolute;
+            bottom: 0;
+            opacity: 0;
+            animation: floatUp linear infinite;
+        }
+        @keyframes floatUp {
+            0%   { opacity: 0;   transform: translateY(0)     scale(0.5) rotate(-5deg); }
+            15%  { opacity: 0.9; }
+            75%  { opacity: 0.4; }
+            100% { opacity: 0;   transform: translateY(-140px) scale(1)   rotate(15deg); }
+        }
+
+        /* ================================================
+           AIRPLANE SECTION
+        ================================================ */
+        .airplane-section {
+            padding: 28px 24px 20px;
+            text-align: center;
+            position: relative;
+            z-index: 1;
+        }
+        .route-eyebrow {
+            font-size: 10px;
+            letter-spacing: 3px;
+            color: var(--text-soft);
+            text-transform: uppercase;
+            margin-bottom: 18px;
+        }
+        .flight-row {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 0;
+        }
+        .city-box { text-align: center; min-width: 80px; }
+        .city-flag { font-size: 32px; display: block; }
+        .city-name {
+            font-size: 11px;
+            letter-spacing: 1.5px;
+            color: var(--text-soft);
+            margin-top: 4px;
+            text-transform: uppercase;
+        }
+        /* 飛行機ラインと動くアニメーション */
+        .flight-track {
+            flex: 1;
+            position: relative;
+            height: 2px;
+            margin: 0 6px;
+            background: linear-gradient(90deg, var(--pink-deep), var(--lavender-mid));
+            border-radius: 2px;
+            margin-bottom: 22px; /* city-name offset */
+        }
+        .plane-icon {
+            position: absolute;
+            font-size: 22px;
+            top: -13px;
+            animation: flyPlane 5s ease-in-out infinite;
+            will-change: left, transform;
+        }
+        @keyframes flyPlane {
+            0%   { left: -8%;  transform: scaleX(1);  opacity: 0; }
+            8%   { opacity: 1; }
+            48%  { left: 108%; transform: scaleX(1);  opacity: 1; }
+            50%  { left: 108%; transform: scaleX(-1); opacity: 0; }
+            52%  { left: 108%; transform: scaleX(-1); opacity: 1; }
+            92%  { opacity: 1; }
+            100% { left: -8%;  transform: scaleX(-1); opacity: 0; }
+        }
+        .route-label {
+            font-size: 12px;
+            color: var(--text-soft);
+            letter-spacing: 2px;
+            margin-top: 6px;
+        }
+
+        /* ================================================
+           INFO CARDS (Korea / Thailand)
+        ================================================ */
+        .info-section {
+            padding: 0 16px 24px;
+            position: relative;
+            z-index: 1;
+        }
+        .section-title {
+            font-size: 11px;
+            letter-spacing: 3px;
+            color: var(--text-soft);
+            text-transform: uppercase;
+            text-align: center;
+            margin-bottom: 14px;
+        }
+        .info-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 12px;
+        }
+        .info-card {
+            background: var(--card-bg);
+            border-radius: 22px;
+            padding: 18px 14px;
+            box-shadow: 0 5px 20px var(--shadow-lav);
+            border: 1.5px solid rgba(255,255,255,0.95);
+            backdrop-filter: blur(12px);
+        }
+        .info-card-head {
+            display: flex;
+            align-items: center;
+            gap: 7px;
+            margin-bottom: 16px;
+            padding-bottom: 12px;
+            border-bottom: 1px solid rgba(255,182,193,0.2);
+        }
+        .info-flag { font-size: 22px; }
+        .info-country {
+            font-size: 11px;
+            font-weight: 700;
+            color: var(--text-dark);
+            letter-spacing: 1px;
+        }
+        .info-item { margin-bottom: 12px; }
+        .info-item:last-child { margin-bottom: 0; }
+        .info-label {
+            font-size: 9px;
+            letter-spacing: 1.5px;
+            color: var(--text-soft);
+            text-transform: uppercase;
+            margin-bottom: 3px;
+        }
+        .info-time {
+            font-size: 24px;
+            font-weight: 700;
+            background: linear-gradient(135deg, var(--pink-deep), var(--lavender-mid));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+        .info-val {
+            font-size: 13px;
+            font-weight: 500;
+            color: var(--text-dark);
+        }
+        .info-holiday {
+            font-size: 11px;
+            color: var(--text-mid);
+            background: linear-gradient(135deg, var(--pink-light), var(--lavender));
+            border-radius: 8px;
+            padding: 3px 8px;
+            display: inline-block;
+            margin-top: 2px;
+        }
+
+        /* ================================================
+           LOVE MESSAGES SECTION
+        ================================================ */
+        .love-section {
+            padding: 0 20px 28px;
+            text-align: center;
+            position: relative;
+            z-index: 1;
+        }
+        .love-card {
+            background: linear-gradient(135deg,
+                rgba(255, 182, 193, 0.25) 0%,
+                rgba(201, 127, 224, 0.18) 100%);
+            border-radius: 24px;
+            padding: 22px 24px;
+            border: 1.5px solid rgba(255,182,193,0.35);
+            margin-bottom: 16px;
+        }
+        .love-text {
+            font-size: 16px;
+            color: var(--text-mid);
+            line-height: 1.9;
+            font-weight: 300;
+        }
+        .love-text strong {
+            font-weight: 700;
+            color: var(--pink-deep);
+        }
+        .love-text em {
+            font-style: normal;
+            color: var(--lavender-deep);
+        }
+        .hearts-row {
+            font-size: 18px;
+            letter-spacing: 10px;
+            opacity: 0.55;
+            animation: heartBeat 2.4s ease-in-out infinite;
+        }
+        @keyframes heartBeat {
+            0%, 100% { opacity: 0.55; transform: scale(1); }
+            50%       { opacity: 0.85; transform: scale(1.06); }
+        }
+
+        /* ================================================
+           FOOTER
+        ================================================ */
+        .footer {
+            padding: 4px 20px 48px;
+            text-align: center;
+            position: relative;
+            z-index: 1;
+        }
+        .footer-text {
+            font-size: 11px;
+            color: var(--text-soft);
+            letter-spacing: 2px;
+            line-height: 1.8;
+        }
+
+        /* ================================================
+           SETTINGS MODAL (bottom sheet)
+        ================================================ */
+        .overlay {
+            position: fixed;
+            inset: 0;
+            background: rgba(60, 30, 60, 0.45);
+            backdrop-filter: blur(6px);
+            z-index: 200;
+            display: none;
+            align-items: flex-end;
+            justify-content: center;
+        }
+        .overlay.open { display: flex; }
+        .sheet {
+            background: linear-gradient(160deg, #FFFAFC 0%, #F8F0FF 100%);
+            border-radius: 32px 32px 0 0;
+            padding: 10px 24px 52px;
+            width: 100%;
+            max-width: 430px;
+            max-height: 88vh;
+            overflow-y: auto;
+            animation: sheetUp 0.32s cubic-bezier(0.25, 0.8, 0.25, 1);
+        }
+        @keyframes sheetUp {
+            from { transform: translateY(100%); }
+            to   { transform: translateY(0); }
+        }
+        .sheet-handle {
+            width: 44px;
+            height: 5px;
+            background: rgba(255,182,193,0.5);
+            border-radius: 3px;
+            margin: 10px auto 22px;
+        }
+        .sheet-title {
+            font-size: 20px;
+            font-weight: 700;
+            color: var(--text-dark);
+            text-align: center;
+            margin-bottom: 24px;
+        }
+        .form-section {
+            font-size: 12px;
+            font-weight: 700;
+            color: var(--text-mid);
+            letter-spacing: 1px;
+            margin-bottom: 14px;
+            margin-top: 4px;
+        }
+        .form-sep {
+            height: 1px;
+            background: rgba(255,182,193,0.25);
+            margin: 20px 0;
+        }
+        .form-group { margin-bottom: 18px; }
+        .form-label {
+            display: block;
+            font-size: 11px;
+            font-weight: 700;
+            color: var(--text-soft);
+            letter-spacing: 1.2px;
+            text-transform: uppercase;
+            margin-bottom: 8px;
+        }
+        .form-input {
+            width: 100%;
+            padding: 14px 16px;
+            border: 1.5px solid rgba(255,182,193,0.4);
+            border-radius: 16px;
+            background: rgba(255,255,255,0.85);
+            font-size: 15px;
+            color: var(--text-dark);
+            font-family: inherit;
+            outline: none;
+            transition: border-color 0.2s, box-shadow 0.2s;
+        }
+        .form-input:focus {
+            border-color: var(--pink-deep);
+            box-shadow: 0 0 0 3px rgba(232,83,138,0.12);
+        }
+        .form-hint {
+            font-size: 11px;
+            color: var(--text-soft);
+            margin-top: 6px;
+            padding: 0 4px;
+            line-height: 1.5;
+        }
+        .btn-save {
+            width: 100%;
+            padding: 17px;
+            background: linear-gradient(135deg, var(--pink-deep), var(--lavender-mid));
+            border: none;
+            border-radius: 18px;
+            color: #fff;
+            font-size: 16px;
+            font-weight: 700;
+            font-family: inherit;
+            cursor: pointer;
+            letter-spacing: 1px;
+            box-shadow: 0 8px 24px rgba(232, 83, 138, 0.4);
+            transition: transform 0.15s, box-shadow 0.15s;
+            margin-top: 4px;
+        }
+        .btn-save:active { transform: scale(0.98); box-shadow: 0 4px 12px rgba(232,83,138,0.3); }
+        .btn-cancel {
+            width: 100%;
+            padding: 14px;
+            background: none;
+            border: 1.5px solid rgba(255,182,193,0.4);
+            border-radius: 18px;
+            color: var(--text-soft);
+            font-size: 14px;
+            font-family: inherit;
+            cursor: pointer;
+            margin-top: 10px;
+            transition: background 0.2s;
+        }
+        .btn-cancel:hover { background: rgba(255,182,193,0.08); }
+
+        /* ================================================
+           RESPONSIVE — wider screens
+        ================================================ */
+        @media (min-width: 430px) {
+            .app { border-radius: 0; }
+        }
+    </style>
+</head>
+<body>
+
+<!-- 背景ブロブ -->
+<div class="blob blob-1"></div>
+<div class="blob blob-2"></div>
+<div class="blob blob-3"></div>
+
+<!-- ===================== APP ===================== -->
+<div class="app">
+
+    <!-- 設定ボタン -->
+    <button class="settings-btn" onclick="openSettings()" aria-label="설정 / 設定">⚙️</button>
+
+    <!-- ── HEADER ── -->
+    <header class="header">
+        <p class="header-eyebrow">우리의 특별한 시간</p>
+        <h1 class="header-title" id="appTitle">우리의 카운트다운</h1>
+        <p class="header-sub">♡ Bangkok &nbsp;↔&nbsp; Seoul ♡</p>
+    </header>
+
+    <!-- ── PHOTO ── -->
+    <section class="photo-section">
+        <div class="photo-frame">
+            <!-- 写真をURLで設定するか設定画面で入力する -->
+            <img id="couplePhoto" src="" alt="커플 사진">
+            <div class="photo-placeholder" id="photoPlaceholder">
+                <div class="photo-placeholder-emoji">📷</div>
+                <div class="photo-placeholder-text">
+                    두 사람의 사진을 여기에 넣어주세요<br>
+                    <span style="font-size:12px; color:var(--text-soft);">⚙️ 설정 → 사진 URL 입력</span>
+                </div>
+            </div>
+            <div class="photo-badge" id="photoBadge">2026</div>
+            <div class="photo-deco">♡ &nbsp; ♡ &nbsp; ♡</div>
+        </div>
+    </section>
+
+    <!-- ── COUNTDOWN ── -->
+    <section class="countdown-section">
+        <p class="countdown-eyebrow">다음 만남까지 • 次に会えるまで</p>
+
+        <!-- D-3 / D-2 / D-1 tag — shown only within 3 days (JS controlled) -->
+        <div class="d-tag-wrap" id="dTagWrap">
+            <span class="d-tag" id="dTag">D-3</span>
+        </div>
+
+        <div class="countdown-number-wrap" id="countdownNumWrap">
+            <span class="countdown-prefix"></span>
+            <span class="countdown-days" id="daysCount">--</span>
+            <span class="countdown-suffix">일</span>
+        </div>
+
+        <!-- sleeps card -->
+        <div class="sleeps-card">
+            <span class="sleeps-icon">🌙</span>
+            <div class="sleeps-text-wrap">
+                <div class="sleeps-main">
+                    <span class="sleeps-num" id="sleepsCount">--</span>번 자면 만날 수 있어
+                </div>
+                <div class="sleeps-ko" id="sleepsKo">조금만 더 기다리면 만날 수 있어요</div>
+            </div>
+        </div>
+
+        <!-- 動的ムードカード — 残り日数で自動切替 (JS制御) -->
+        <div class="mood-card" id="moodCard">
+            <span class="mood-emoji" id="moodEmoji">💕</span>
+            <p class="mood-ko" id="moodKo">조금만 더 기다리자</p>
+            <p class="mood-ja" id="moodJa">Just a little more, let's wait</p>
+        </div>
+
+        <!-- D-Day 당일 특별 배너 (JS制御) -->
+        <div class="today-banner" id="todayBanner">
+            <span class="today-confetti">🎊</span>
+            <p class="today-banner-en">Today is our day ✨</p>
+            <p class="today-banner-ko">오늘 드디어 만나는 날이야<br>드디어 너를 안을 수 있어 💕</p>
+        </div>
+
+        <!-- 思い出モード — 会う日を過ぎた場合 (JS制御) -->
+        <div class="past-banner" id="pastBanner">
+            <p class="past-banner-ko">🌸 우리 다시 만난 날</p>
+            <p class="past-banner-ja">また会えた日の思い出 💜</p>
+        </div>
+
+        <!-- メインメッセージ (設定画面で変更可能) -->
+        <p class="main-message" id="mainMessage">조금만 더 기다리자 💕</p>
+        <p class="meet-date-text" id="meetDateText">다음 만날 날 : 설정해주세요</p>
+
+        <!-- フローティングハーツ — 7日以内に自動表示 (JS制御) -->
+        <div class="hearts-float-wrap" id="heartsFloat"></div>
+    </section>
+
+    <!-- ── AIRPLANE ── -->
+    <section class="airplane-section">
+        <p class="route-eyebrow">✈ &nbsp; FLIGHT ROUTE</p>
+        <div class="flight-row">
+            <div class="city-box">
+                <span class="city-flag">🇹🇭</span>
+                <span class="city-name">Bangkok</span>
+            </div>
+            <div class="flight-track">
+                <span class="plane-icon">✈️</span>
+            </div>
+            <div class="city-box">
+                <span class="city-flag">🇰🇷</span>
+                <span class="city-name">Seoul</span>
+            </div>
+        </div>
+        <p class="route-label">Thailand &nbsp;⇄&nbsp; Korea</p>
+    </section>
+
+    <!-- ── INFO CARDS ── -->
+    <section class="info-section">
+        <p class="section-title">현재 상황 • Current Status</p>
+        <div class="info-grid">
+
+            <!-- 韓国カード -->
+            <div class="info-card">
+                <div class="info-card-head">
+                    <span class="info-flag">🇰🇷</span>
+                    <span class="info-country">KOREA</span>
+                </div>
+                <div class="info-item">
+                    <div class="info-label">현재 시각</div>
+                    <div class="info-time" id="koreaTime">--:--</div>
+                </div>
+                <!--
+                    WEATHER (Korea)
+                    TODO: ここをOpenWeatherMap等のAPIに差し替え
+                    endpoint: https://api.openweathermap.org/data/2.5/weather?q=Seoul&appid=API_KEY&units=metric&lang=ko
+                -->
+                <div class="info-item">
+                    <div class="info-label">날씨</div>
+                    <div class="info-val" id="koreaWeather">⛅ 맑음 28°C</div>
+                </div>
+                <!--
+                    HOLIDAY (Korea)
+                    TODO: ここをHoliday API等に差し替え
+                    endpoint: https://date.nager.at/api/v3/NextPublicHolidays/KR
+                -->
+                <div class="info-item">
+                    <div class="info-label">다음 공휴일</div>
+                    <div><span class="info-holiday" id="koreaHoliday">광복절 8/15</span></div>
+                </div>
+            </div>
+
+            <!-- タイカード -->
+            <div class="info-card">
+                <div class="info-card-head">
+                    <span class="info-flag">🇹🇭</span>
+                    <span class="info-country">THAILAND</span>
+                </div>
+                <div class="info-item">
+                    <div class="info-label">현재 시각</div>
+                    <div class="info-time" id="thaiTime">--:--</div>
+                </div>
+                <!--
+                    WEATHER (Thailand)
+                    TODO: ここをAPIに差し替え
+                    endpoint: https://api.openweathermap.org/data/2.5/weather?q=Bangkok&appid=API_KEY&units=metric&lang=ko
+                -->
+                <div class="info-item">
+                    <div class="info-label">날씨</div>
+                    <div class="info-val" id="thaiWeather">🌤 구름 많음 33°C</div>
+                </div>
+                <!--
+                    HOLIDAY (Thailand)
+                    TODO: ここをAPIに差し替え
+                    endpoint: https://date.nager.at/api/v3/NextPublicHolidays/TH
+                -->
+                <div class="info-item">
+                    <div class="info-label">다음 공휴일</div>
+                    <div><span class="info-holiday" id="thaiHoliday">여왕의 날 8/12</span></div>
+                </div>
+            </div>
+
+        </div>
+    </section>
+
+    <!-- ── LOVE MESSAGES ── -->
+    <section class="love-section">
+        <div class="love-card">
+            <p class="love-text">
+                오늘도 보고 싶어 🌸<br>
+                <strong id="girlfriendNameEl">연제</strong>야, 멀리 있어도<br>
+                내 마음은 항상 너한테 있어<br>
+                <em>우리 곧 만나요 💜</em>
+            </p>
+        </div>
+        <div class="hearts-row">♡ &nbsp; ♡ &nbsp; ♡</div>
+    </section>
+
+    <!-- ── FOOTER ── -->
+    <footer class="footer">
+        <p class="footer-text">
+            오늘도 사랑해 &nbsp;•&nbsp; 매일 보고 싶어<br>
+            우리 곧 만나요 &nbsp;•&nbsp; 화이팅 💕
+        </p>
+    </footer>
+
+</div><!-- /app -->
+
+
+<!-- ===================== SETTINGS MODAL ===================== -->
+<div class="overlay" id="overlay" onclick="handleOverlayClick(event)">
+    <div class="sheet" id="sheet">
+        <div class="sheet-handle"></div>
+        <h2 class="sheet-title">설정 / Settings ⚙️</h2>
+
+        <!-- Next meeting date -->
+        <p class="form-section">📅 다음 만날 날 (Next Meeting)</p>
+        <div class="form-group">
+            <label class="form-label" for="inDate">날짜 선택 / Select Date</label>
+            <input type="date" class="form-input" id="inDate">
+        </div>
+
+        <div class="form-sep"></div>
+
+        <!-- Names -->
+        <p class="form-section">👫 이름 설정 (Names)</p>
+        <div class="form-group">
+            <label class="form-label" for="inGf">🇰🇷 여자친구 이름 (Korea · Girlfriend)</label>
+            <input type="text" class="form-input" id="inGf" placeholder="예: 연제 / e.g. Yeonje">
+        </div>
+        <div class="form-group">
+            <label class="form-label" for="inBf">🇹🇭 남자친구 이름 (Thailand · Boyfriend)</label>
+            <input type="text" class="form-input" id="inBf" placeholder="예: Akira">
+        </div>
+
+        <div class="form-sep"></div>
+
+        <!-- Message -->
+        <p class="form-section">💌 메시지 (Message)</p>
+        <div class="form-group">
+            <label class="form-label" for="inMsg">메인 메시지 / Main Message</label>
+            <input type="text" class="form-input" id="inMsg" placeholder="조금만 더 기다리자 💕">
+        </div>
+
+        <div class="form-sep"></div>
+
+        <!-- Photo -->
+        <p class="form-section">📸 사진 설정 (Photo)</p>
+        <div class="form-group">
+            <label class="form-label" for="inPhoto">사진 URL / Photo URL</label>
+            <input type="url" class="form-input" id="inPhoto" placeholder="https://example.com/photo.jpg">
+            <p class="form-hint">
+                ※ For local images, place the file in the same folder as index.html and enter the filename (e.g. photo.jpg)<br>
+                ※ 로컬 이미지는 HTML과 같은 폴더에 저장 후 파일명만 입력 (예: photo.jpg)
+            </p>
+        </div>
+
+        <button class="btn-save" onclick="saveSettings()">저장하기 / Save 💕</button>
+        <button class="btn-cancel" onclick="closeSettings()">닫기 / Close</button>
+    </div>
+</div>
+
+
+<script>
+    // ============================================================
+    //  DEFAULT SETTINGS
+    //  ここで初期値を直接変更できます
+    // ============================================================
+    const DEFAULTS = {
+        meetDate:        '2026-08-20',          // Next meeting date YYYY-MM-DD
+        girlfriendName:  '연제',                  // Girlfriend's name
+        boyfriendName:   'Boyfriend',            // Boyfriend's name
+        message:         '조금만 더 기다리자 💕', // Main message
+        photoUrl:        '',                     // Photo URL (leave empty for placeholder)
+    };
+
+    // ============================================================
+    //  DUMMY DATA — ここをAPI呼び出しに差し替えてください
+    // ============================================================
+
+    // TODO: Replace with OpenWeatherMap API call
+    // Korea:   GET https://api.openweathermap.org/data/2.5/weather?q=Seoul&appid=YOUR_KEY&units=metric
+    // Thailand: GET https://api.openweathermap.org/data/2.5/weather?q=Bangkok&appid=YOUR_KEY&units=metric
+    function getWeatherDummy() {
+        return {
+            korea:   '⛅ 맑음 28°C',
+            thailand:'🌤 구름 많음 33°C',
+        };
+    }
+
+    // TODO: Replace with Holiday API call
+    // Korea:   GET https://date.nager.at/api/v3/NextPublicHolidays/KR
+    // Thailand: GET https://date.nager.at/api/v3/NextPublicHolidays/TH
+    function getHolidayDummy() {
+        return {
+            korea:   '광복절 8/15',
+            thailand:'여왕의 날 8/12',
+        };
+    }
+
+    // ============================================================
+    //  MOOD MESSAGES
+    //  Edit these freely to customize messages per day range
+    //  ko: Korean (main) / en: English (subtitle) / level: card color theme
+    // ============================================================
+    const MOOD_MESSAGES = {
+        // 61+ days
+        far: {
+            level: 'far', emoji: '🌸',
+            ko: '아직 조금 멀지만, 매일 너를 생각하고 있어',
+            en: 'まだ少し先だけど、毎日君のことを考えてるよ',
+        },
+        // 31–60 days
+        medium: {
+            level: 'far', emoji: '💜',
+            ko: '매일 조금씩 가까워지고 있어. 기다릴게',
+            en: '毎日少しずつ近づいてる。ずっと待ってるよ',
+        },
+        // 15–30 days
+        month: {
+            level: 'month', emoji: '🥺',
+            ko: '이제 진짜 얼마 안 남았어. 조금만 더 기다리자',
+            en: 'もう本当にあと少し。もう少しだけ待とうね',
+        },
+        // 8–14 days
+        twoweeks: {
+            level: 'twoweeks', emoji: '🫶',
+            ko: '생각만 해도 설레. 곧 안아줄게',
+            en: '考えるだけでドキドキする。もうすぐ抱きしめるね',
+        },
+        // 4–7 days (floating hearts start)
+        week: {
+            level: 'week', emoji: '💓',
+            ko: '하루하루가 너무 느리게 가… 빨리 보고 싶어',
+            en: '一日一日が遅く感じる…早く会いたい',
+            floatingHearts: true, heartsCount: 5,
+        },
+        // 2–3 days (D-tag + hearts)
+        urgent: {
+            level: 'urgent', emoji: '💗',
+            ko: '이제 거의 다 왔어. 심장이 너무 두근거려',
+            en: 'もうすぐだね。心臓がドキドキしてる',
+            floatingHearts: true, heartsCount: 7, showDTag: true,
+        },
+        // Eve D-1 (D-tag + max hearts)
+        eve: {
+            level: 'eve', emoji: '🥹',
+            ko: '내일 드디어 만난다. 오늘 잠 못 잘 것 같아',
+            en: '明日ついに会えるね。今日は眠れなさそう',
+            floatingHearts: true, heartsCount: 9, showDTag: true,
+        },
+    };
+
+    // 残り日数からムード設定を選択
+    function getMoodConfig(days) {
+        if (days > 60)  return MOOD_MESSAGES.far;
+        if (days > 30)  return MOOD_MESSAGES.medium;
+        if (days > 14)  return MOOD_MESSAGES.month;
+        if (days > 7)   return MOOD_MESSAGES.twoweeks;
+        if (days > 3)   return MOOD_MESSAGES.week;
+        if (days > 1)   return MOOD_MESSAGES.urgent;
+        if (days === 1) return MOOD_MESSAGES.eve;
+        return null; // 当日・過去は別処理
+    }
+
+    // ムードカード・D-タグ・ハーツをまとめて更新
+    function renderMoodCard(diffDays) {
+        const card       = document.getElementById('moodCard');
+        const todayEl    = document.getElementById('todayBanner');
+        const pastEl     = document.getElementById('pastBanner');
+        const dTagWrap   = document.getElementById('dTagWrap');
+        const dTagEl     = document.getElementById('dTag');
+        const heartsWrap = document.getElementById('heartsFloat');
+
+        // 全リセット
+        const levels = ['level-far','level-month','level-twoweeks','level-week','level-urgent','level-eve','level-past'];
+        card.classList.remove('visible', ...levels);
+        todayEl.classList.remove('visible');
+        pastEl.classList.remove('visible');
+        dTagWrap.classList.remove('visible');
+        heartsWrap.innerHTML = '';
+
+        if (diffDays === 0) {
+            // 当日 — today-banner + ハーツ最大
+            card.style.display = 'none';
+            todayEl.classList.add('visible');
+            spawnFloatingHearts(heartsWrap, 12);
+            return;
+        }
+
+        if (diffDays < 0) {
+            // 思い出モード
+            card.style.display = 'none';
+            pastEl.classList.add('visible');
+            return;
+        }
+
+        // 通常モード (days > 0)
+        card.style.display = '';
+        const mood = getMoodConfig(diffDays);
+        if (!mood) return;
+
+        document.getElementById('moodEmoji').textContent = mood.emoji;
+        document.getElementById('moodKo').textContent    = mood.ko;
+        document.getElementById('moodJa').textContent    = mood.en;
+        card.classList.add('level-' + mood.level);
+
+        // ふわっとフェードイン (二重 rAF で確実にトランジション発火)
+        requestAnimationFrame(() =>
+            requestAnimationFrame(() => card.classList.add('visible'))
+        );
+
+        // D-タグ (3日前・2日前・前日)
+        if (mood.showDTag) {
+            dTagEl.textContent = 'D-' + diffDays;
+            dTagWrap.classList.add('visible');
+        }
+
+        // フローティングハーツ (7日以内)
+        if (mood.floatingHearts) {
+            spawnFloatingHearts(heartsWrap, mood.heartsCount || 5);
+        }
+    }
+
+    // ハートをランダムな位置・タイミングで生成
+    function spawnFloatingHearts(container, count) {
+        const emojis = ['♡', '💕', '🩷', '💜', '✨', '💗'];
+        container.innerHTML = '';
+        for (let i = 0; i < count; i++) {
+            const el = document.createElement('span');
+            el.className   = 'heart-float';
+            el.textContent = emojis[i % emojis.length];
+            el.style.left              = (5 + Math.random() * 88) + '%';
+            el.style.fontSize          = (11 + Math.random() * 11) + 'px';
+            el.style.animationDelay    = (Math.random() * 3.5) + 's';
+            el.style.animationDuration = (2.2 + Math.random() * 2) + 's';
+            container.appendChild(el);
+        }
+    }
+
+    // ============================================================
+    //  STATE
+    // ============================================================
+    let cfg = {};
+
+    function loadConfig() {
+        const saved = localStorage.getItem('lc-settings');
+        cfg = saved ? { ...DEFAULTS, ...JSON.parse(saved) } : { ...DEFAULTS };
+    }
+
+    function persistConfig() {
+        localStorage.setItem('lc-settings', JSON.stringify(cfg));
+    }
+
+    // ============================================================
+    //  RENDER — UIをcfgで更新
+    // ============================================================
+    function render() {
+        // 写真
+        const img   = document.getElementById('couplePhoto');
+        const ph    = document.getElementById('photoPlaceholder');
+        if (cfg.photoUrl) {
+            img.src = cfg.photoUrl;
+            img.classList.add('visible');
+            ph.style.display = 'none';
+        } else {
+            img.classList.remove('visible');
+            ph.style.display = 'flex';
+        }
+
+        // メッセージ
+        document.getElementById('girlfriendNameEl').textContent = cfg.girlfriendName;
+        document.getElementById('mainMessage').textContent      = cfg.message;
+
+        // カウントダウン
+        renderCountdown();
+
+        // 天気・祝日（ダミー）
+        const w = getWeatherDummy();
+        const h = getHolidayDummy();
+        document.getElementById('koreaWeather').textContent   = w.korea;
+        document.getElementById('thaiWeather').textContent    = w.thailand;
+        document.getElementById('koreaHoliday').textContent   = h.korea;
+        document.getElementById('thaiHoliday').textContent    = h.thailand;
+    }
+
+    // ============================================================
+    //  COUNTDOWN
+    // ============================================================
+    function renderCountdown() {
+        const today    = new Date(); today.setHours(0, 0, 0, 0);
+        const meetDate = new Date(cfg.meetDate + 'T00:00:00');
+        const diffDays = Math.round((meetDate - today) / 86400000);
+
+        const daysEl     = document.getElementById('daysCount');
+        const sleepsEl   = document.getElementById('sleepsCount');
+        const sleepsKo   = document.getElementById('sleepsKo');
+        const dateEl     = document.getElementById('meetDateText');
+        const badge      = document.getElementById('photoBadge');
+        const numWrap    = document.getElementById('countdownNumWrap');
+        const sleepsCard = document.querySelector('.sleeps-card');
+
+        // 表示リセット
+        numWrap.style.display    = '';
+        sleepsCard.style.display = '';
+
+        if (diffDays > 0) {
+            daysEl.textContent   = diffDays;
+            sleepsEl.textContent = diffDays;
+            sleepsKo.textContent = `${diffDays}번만 자면 만날 수 있어요`;
+
+            const formatted = meetDate.toLocaleDateString('ko-KR',
+                { year: 'numeric', month: 'long', day: 'numeric', weekday: 'short' });
+            dateEl.textContent = '다음 만날 날 : ' + formatted;
+            badge.textContent  = meetDate.getFullYear();
+
+        } else if (diffDays === 0) {
+            // 当日: カウンター非表示・today-banner表示
+            numWrap.style.display    = 'none';
+            sleepsCard.style.display = 'none';
+            dateEl.textContent = '🎉 오늘이야! 만나러 가자!';
+            badge.textContent  = 'TODAY';
+
+        } else {
+            // 思い出モード: カウンター非表示・past-banner表示
+            numWrap.style.display    = 'none';
+            sleepsCard.style.display = 'none';
+            dateEl.textContent = '날짜를 설정해주세요';
+            badge.textContent  = new Date().getFullYear();
+        }
+
+        // 動的ムードカード・D-タグ・フローティングハーツを更新
+        renderMoodCard(diffDays);
+    }
+
+    // ============================================================
+    //  CLOCKS — 1秒ごとに更新
+    // ============================================================
+    function renderTimes() {
+        const now = Date.now();
+
+        // Korea: UTC+9
+        const koreaDate = new Date(now + 9 * 3600000);
+        document.getElementById('koreaTime').textContent = utcOffsetToHHMM(koreaDate);
+
+        // Thailand: UTC+7
+        const thaiDate = new Date(now + 7 * 3600000);
+        document.getElementById('thaiTime').textContent  = utcOffsetToHHMM(thaiDate);
+    }
+
+    function utcOffsetToHHMM(d) {
+        // d はすでにオフセット分を加算した Date
+        const h = String(d.getUTCHours()).padStart(2, '0');
+        const m = String(d.getUTCMinutes()).padStart(2, '0');
+        return h + ':' + m;
+    }
+
+    // ============================================================
+    //  SETTINGS MODAL
+    // ============================================================
+    function openSettings() {
+        document.getElementById('inDate').value  = cfg.meetDate;
+        document.getElementById('inGf').value    = cfg.girlfriendName !== '연제'      ? cfg.girlfriendName : '';
+        document.getElementById('inBf').value    = cfg.boyfriendName  !== 'Boyfriend' ? cfg.boyfriendName  : '';
+        document.getElementById('inMsg').value   = cfg.message;
+        document.getElementById('inPhoto').value = cfg.photoUrl || '';
+        document.getElementById('overlay').classList.add('open');
+    }
+
+    function closeSettings() {
+        document.getElementById('overlay').classList.remove('open');
+    }
+
+    function handleOverlayClick(e) {
+        if (e.target === document.getElementById('overlay')) closeSettings();
+    }
+
+    function saveSettings() {
+        const d   = document.getElementById('inDate').value;
+        const gf  = document.getElementById('inGf').value.trim();
+        const bf  = document.getElementById('inBf').value.trim();
+        const msg = document.getElementById('inMsg').value.trim();
+        const ph  = document.getElementById('inPhoto').value.trim();
+
+        if (d)   cfg.meetDate        = d;
+        if (gf)  cfg.girlfriendName  = gf;
+        if (bf)  cfg.boyfriendName   = bf;
+        if (msg) cfg.message         = msg;
+        cfg.photoUrl = ph;  // 空文字での上書きも許可（写真削除）
+
+        persistConfig();
+        closeSettings();
+        render();
+    }
+
+    // ============================================================
+    //  INIT
+    // ============================================================
+    function init() {
+        loadConfig();
+        render();
+        renderTimes();
+        setInterval(renderTimes, 1000);      // 時計を毎秒更新
+        setInterval(renderCountdown, 60000); // カウントダウンを毎分更新
+    }
+
+    document.addEventListener('DOMContentLoaded', init);
+</script>
+
+</body>
+</html>
