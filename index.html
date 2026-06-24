@@ -745,6 +745,36 @@
         .btn-cancel:hover { background: rgba(255,182,193,0.08); }
 
         /* ================================================
+           DATE CHANGE BUTTON (main screen)
+        ================================================ */
+        .date-change-wrap { position: relative; text-align: center; margin-top: 10px; }
+        .btn-date-change {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            padding: 10px 22px;
+            background: linear-gradient(135deg, var(--pink-light), var(--lavender));
+            border: 1.5px solid rgba(232,83,138,0.3);
+            border-radius: 22px;
+            font-size: 13px;
+            font-weight: 600;
+            color: var(--text-mid);
+            cursor: pointer;
+            font-family: inherit;
+            transition: box-shadow 0.2s, border-color 0.2s;
+            letter-spacing: 0.5px;
+        }
+        .btn-date-change:hover { box-shadow: 0 4px 16px var(--shadow-pink); border-color: rgba(232,83,138,0.55); }
+        .main-date-input {
+            position: absolute;
+            opacity: 0;
+            pointer-events: none;
+            width: 1px;
+            height: 1px;
+            top: 0; left: 50%;
+        }
+
+        /* ================================================
            PHOTO UPLOAD (settings modal)
         ================================================ */
         .settings-photo-preview {
@@ -903,7 +933,16 @@
 
         <!-- メインメッセージ (設定画面で変更可能) -->
         <p class="main-message" id="mainMessage">조금만 더 기다리자 💕</p>
-        <p class="meet-date-text" id="meetDateText">다음 만날 날 : 설정해주세요</p>
+
+        <!-- 日付表示 + タップで変更できるボタン -->
+        <div class="date-change-wrap">
+            <p class="meet-date-text" id="meetDateText">다음 만날 날 : 설정해주세요</p>
+            <label class="btn-date-change" for="mainDateInput">
+                📅 날짜 변경 / Change Date
+            </label>
+            <input type="date" id="mainDateInput" class="main-date-input"
+                   onchange="onMainDateChange(event)">
+        </div>
 
         <!-- フローティングハーツ — 7日以内に自動表示 (JS制御) -->
         <div class="hearts-float-wrap" id="heartsFloat"></div>
@@ -1327,6 +1366,7 @@
         const badge      = document.getElementById('photoBadge');
         const numWrap    = document.getElementById('countdownNumWrap');
         const sleepsCard = document.querySelector('.sleeps-card');
+        document.getElementById('mainDateInput').value = cfg.meetDate;
 
         // 表示リセット
         numWrap.style.display    = '';
@@ -1421,8 +1461,17 @@
         updateSettingsPreview('');
     }
 
+    function onMainDateChange(event) {
+        const newDate = event.target.value;
+        if (!newDate) return;
+        cfg.meetDate = newDate;
+        persistConfig();
+        renderCountdown();
+    }
+
     function openSettings() {
-        document.getElementById('inDate').value  = cfg.meetDate;
+        document.getElementById('inDate').value      = cfg.meetDate;
+        document.getElementById('mainDateInput').value = cfg.meetDate;
         document.getElementById('inGf').value    = cfg.girlfriendName !== '연제'      ? cfg.girlfriendName : '';
         document.getElementById('inBf').value    = cfg.boyfriendName  !== 'Boyfriend' ? cfg.boyfriendName  : '';
         document.getElementById('inMsg').value   = cfg.message;
