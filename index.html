@@ -746,8 +746,13 @@
 
         /* ================================================
            DATE CHANGE BUTTON (main screen)
+           input を透明にしてボタンの上に重ねる — iOS対応
         ================================================ */
-        .date-change-wrap { position: relative; text-align: center; margin-top: 10px; }
+        .date-change-wrap { text-align: center; margin-top: 10px; }
+        .date-btn-wrap {
+            position: relative;
+            display: inline-block;
+        }
         .btn-date-change {
             display: inline-flex;
             align-items: center;
@@ -759,19 +764,19 @@
             font-size: 13px;
             font-weight: 600;
             color: var(--text-mid);
-            cursor: pointer;
             font-family: inherit;
-            transition: box-shadow 0.2s, border-color 0.2s;
             letter-spacing: 0.5px;
+            pointer-events: none; /* タップは上の input が受け取る */
         }
-        .btn-date-change:hover { box-shadow: 0 4px 16px var(--shadow-pink); border-color: rgba(232,83,138,0.55); }
+        /* 透明な date input をボタン全体に被せる */
         .main-date-input {
             position: absolute;
+            inset: 0;
+            width: 100%;
+            height: 100%;
             opacity: 0;
-            pointer-events: none;
-            width: 1px;
-            height: 1px;
-            top: 0; left: 50%;
+            cursor: pointer;
+            font-size: 16px; /* iOSズーム防止 */
         }
 
         /* ================================================
@@ -934,14 +939,16 @@
         <!-- メインメッセージ (設定画面で変更可能) -->
         <p class="main-message" id="mainMessage">조금만 더 기다리자 💕</p>
 
-        <!-- 日付表示 + タップで変更できるボタン -->
+        <!-- 日付表示 + タップで変更できるボタン (iOS対応) -->
         <div class="date-change-wrap">
             <p class="meet-date-text" id="meetDateText">다음 만날 날 : 설정해주세요</p>
-            <label class="btn-date-change" for="mainDateInput">
-                📅 날짜 변경 / Change Date
-            </label>
-            <input type="date" id="mainDateInput" class="main-date-input"
-                   onchange="onMainDateChange(event)">
+            <div class="date-btn-wrap">
+                <!-- 見た目のボタン -->
+                <span class="btn-date-change">📅 날짜 변경 / Change Date</span>
+                <!-- 透明な date input がボタン全体を覆ってタップを受け取る -->
+                <input type="date" id="mainDateInput" class="main-date-input"
+                       onchange="onMainDateChange(event)">
+            </div>
         </div>
 
         <!-- フローティングハーツ — 7日以内に自動表示 (JS制御) -->
